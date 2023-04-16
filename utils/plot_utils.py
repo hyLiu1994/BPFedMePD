@@ -28,6 +28,7 @@ def get_training_data_value(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[
         else:
             algorithms_list[i] = algorithms_list[i] + "_" + string_learning_rate + "_" + str(num_users) + "u" + "_" + str(batch_size[i]) + "b"  "_" +str(loc_ep1[i])
 
+        print(dataset + "_" + datasize +"_"+ algorithms_list[i] + "_avg")
         train_acc[i, :], train_loss[i, :], glob_acc[i, :] = np.array(
             simple_read_data(dataset + "_" + datasize +"_"+ algorithms_list[i] + "_avg"))[:, :Numb_Glob_Iters]
         algs_lbl[i] = algs_lbl[i]
@@ -389,9 +390,12 @@ def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, l
     glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     for i in range(Numb_Algs):
         print("max accurancy:", glob_acc_[i].max())
+
     glob_acc =  average_smooth(glob_acc_, window='flat')
     train_loss = average_smooth(train_loss_, window='flat')
     train_acc = average_smooth(train_acc_, window='flat')
+    print(glob_acc, train_loss, train_acc)
+
     
     linestyles = ['-', '--', '-.','-', '--', '-.']
     linestyles = ['-','-','-','-','-','-','-']
@@ -462,7 +466,7 @@ def plot_summary_one_figure_mnist_K(num_users, loc_ep1, Numb_Glob_Iters, lamb, l
     plt.ylabel('Training Loss')
     plt.xlabel('Global rounds')
     #plt.ylim([0.05,  0.6]) # non convex-case
-    plt.ylim([0.19,  0.5]) # convex-case
+    # plt.ylim([0.19,  0.5]) # convex-case
     plt.savefig(dataset.upper() + datasize.upper() +  "Convex_Mnist_train_K.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_train_K.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
@@ -477,7 +481,7 @@ def plot_summary_one_figure_mnist_K(num_users, loc_ep1, Numb_Glob_Iters, lamb, l
     plt.ylabel('Test Accuracy')
     plt.xlabel('Global rounds')
     # plt.ylim([0.84,  0.98]) # non convex-case
-    plt.ylim([0.86,  0.95]) # Convex-case
+    # plt.ylim([0.86,  0.95]) # Convex-case
     plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_test_K.pdf", bbox_inches="tight")
    #plt.savefig(dataset.upper() + "Non_Convex_Mnist_test_K.pdf", bbox_inches="tight")
     plt.close()

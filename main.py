@@ -59,7 +59,10 @@ def main(dataset, datasize, algorithm, model, batch_size, learning_rate, beta, l
             server = BPFedPD(dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters, local_epochs, optimizer, numusers, i, device, personal_learning_rate)
         
         server.train()
-        server.test()
+        if (algorithm == 'pFedBayes' or algorithm == 'BPFedPD'):
+            server.testpFedbayes()
+        else:
+            server.test()
 
     # Average data 
     if(algorithm == "PerAvg"):
