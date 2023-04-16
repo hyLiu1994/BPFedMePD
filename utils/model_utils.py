@@ -240,7 +240,7 @@ def read_cifa_data():
 
     return train_data['users'], _ , train_data['user_data'], test_data['user_data']
 
-def read_data(dataset):
+def read_data(dataset, datasize):
     '''parses data in given train and test data directories
 
     assumes:
@@ -255,19 +255,19 @@ def read_data(dataset):
         test_data: dictionary of test data
     '''
 
-    if(dataset == "Cifar10"):
-        clients, groups, train_data, test_data = read_cifa_data()
-        return clients, groups, train_data, test_data
+    # if(dataset == "Cifar10"):
+    #     clients, groups, train_data, test_data = read_cifa_data()
+    #     return clients, groups, train_data, test_data
 
-    train_data_dir = os.path.join('data',dataset,'data', 'train')
-    test_data_dir = os.path.join('data',dataset,'data', 'test')
+    train_data_dir = os.path.join('data',dataset, 'data', 'train')
+    test_data_dir = os.path.join('data',dataset, 'data', 'test')
     clients = []
     groups = []
     train_data = {}
     test_data = {}
 
     train_files = os.listdir(train_data_dir)
-    train_files = [f for f in train_files if f.endswith('.json')]
+    train_files = [f for f in train_files if f.endswith(datasize + '.json')]
     for f in train_files:
         file_path = os.path.join(train_data_dir, f)
         with open(file_path, 'r') as inf:
@@ -294,7 +294,7 @@ def read_user_data(index,data,dataset):
     train_data = data[2][id]
     test_data = data[3][id]
     X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
-    if(dataset == "Mnist"):
+    if(dataset == "Mnist" or dataset == 'FMnist'):
         X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
         X_train = torch.Tensor(X_train).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
         y_train = torch.Tensor(y_train).type(torch.int64)

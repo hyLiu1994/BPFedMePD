@@ -6,12 +6,13 @@ from utils.model_utils import Metrics
 import copy
 
 class Server:
-    def __init__(self, device, dataset,algorithm, model, batch_size, learning_rate ,beta, lamda,
+    def __init__(self, device, dataset, datasize, algorithm, model, batch_size, learning_rate ,beta, lamda,
                  num_glob_iters, local_epochs, optimizer,num_users, times):
 
         # Set up the main attributes
         self.device = device
         self.dataset = dataset
+        self.datasize = datasize
         self.num_glob_iters = num_glob_iters
         self.local_epochs = local_epochs
         self.batch_size = batch_size
@@ -126,7 +127,7 @@ class Server:
             
     # Save loss, accurancy to h5 fiel
     def save_results(self):
-        alg = self.dataset + "_" + self.algorithm
+        alg = self.dataset + "_" + self.datasize + "_" + self.algorithm
         alg = alg + "_" + str(self.learning_rate) + "_" + str(self.beta) + "_" + str(self.lamda) + "_" + str(self.num_users) + "u" + "_" + str(self.batch_size) + "b" + "_" + str(self.local_epochs)
         if(self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
             alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
@@ -139,7 +140,7 @@ class Server:
                 hf.close()
         
         # store persionalized value
-        alg = self.dataset + "_" + self.algorithm + "_p"
+        alg = self.dataset + "_" + self.datasize  + "_" + self.algorithm + "_p"
         alg = alg  + "_" + str(self.learning_rate) + "_" + str(self.beta) + "_" + str(self.lamda) + "_" + str(self.num_users) + "u" + "_" + str(self.batch_size) + "b"+ "_" + str(self.local_epochs)
         if(self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
             alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)

@@ -14,42 +14,35 @@ from utils.plot_utils import *
 import torch
 torch.manual_seed(0)
 
-def main(dataset, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
+def main(dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
          local_epochs, optimizer, numusers, K, personal_learning_rate, times, gpu):
 
     # Get device status: Check GPU or CPU
     device = torch.device("cuda:{}".format(gpu) if torch.cuda.is_available() and gpu != -1 else "cpu")
 
     for i in range(times):
-        print("---------------Running time:------------",i)
+        print("---------------Running time:", i, "------------")
         # Generate model
-        if(model == "mclr"):
-            if(dataset == "Mnist"):
-                model = Mclr_Logistic().to(device), model
-            else:
-                model = Mclr_Logistic(60,10).to(device), model
-                
         if(model == "cnn"):
-            if(dataset == "Mnist"):
-                model = Net().to(device), model
-            elif(dataset == "Cifar10"):
-                model = CNNCifar(10).to(device), model
-            
+            model = CNNCifar(10).to(device), model 
+
         if(model == "dnn"):
             if(dataset == "Mnist"):
-                model = DNN().to(device), model
-            else: 
-                model = DNN(60,20,10).to(device), model
+                model = DNN(784, 100, 10).to(device), model
+            elif(dataset == "FMnist"): 
+                model = DNN(784, 100, 10).to(device), model
+            elif (dataset == 'Cifar10'):
+                model = DNN(3072, 100, 10).to(device), model
 
         # select algorithm
         if(algorithm == "FedAvg"):
-            server = FedAvg(device, dataset, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters, local_epochs, optimizer, numusers, i)
+            server = FedAvg(device, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters, local_epochs, optimizer, numusers, i)
         
         if(algorithm == "pFedMe"):
-            server = pFedMe(device, dataset, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters, local_epochs, optimizer, numusers, K, personal_learning_rate, i)
+            server = pFedMe(device, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters, local_epochs, optimizer, numusers, K, personal_learning_rate, i)
 
         if(algorithm == "PerAvg"):
-            server = PerAvg(device, dataset, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters, local_epochs, optimizer, numusers, i)
+            server = PerAvg(device, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters, local_epochs, optimizer, numusers, i)
 
         server.train()
         server.test()
@@ -57,14 +50,17 @@ def main(dataset, algorithm, model, batch_size, learning_rate, beta, lamda, num_
     # Average data 
     if(algorithm == "PerAvg"):
         algorithm == "PerAvg_p"
+
     if(algorithm == "pFedMe"):
-        average_data(num_users=numusers, loc_ep1=local_epochs, Numb_Glob_Iters=num_glob_iters, lamb=lamda,learning_rate=learning_rate, beta = beta, algorithms="pFedMe_p", batch_size=batch_size, dataset=dataset, k = K, personal_learning_rate = personal_learning_rate,times = times)
-    average_data(num_users=numusers, loc_ep1=local_epochs, Numb_Glob_Iters=num_glob_iters, lamb=lamda,learning_rate=learning_rate, beta = beta, algorithms=algorithm, batch_size=batch_size, dataset=dataset, k = K, personal_learning_rate = personal_learning_rate,times = times)
+        average_data(num_users=numusers, loc_ep1=local_epochs, Numb_Glob_Iters=num_glob_iters, lamb=lamda,learning_rate=learning_rate, beta = beta, algorithms="pFedMe_p", batch_size=batch_size, dataset=dataset, datasize=datasize, k = K, personal_learning_rate = personal_learning_rate,times = times)
+
+    average_data(num_users=numusers, loc_ep1=local_epochs, Numb_Glob_Iters=num_glob_iters, lamb=lamda,learning_rate=learning_rate, beta = beta, algorithms=algorithm, batch_size=batch_size, dataset=dataset, datasize=datasize, k = K, personal_learning_rate = personal_learning_rate,times = times)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, default="Cifar10", choices=["Mnist", "Synthetic", "Cifar10"])
-    parser.add_argument("--model", type=str, default="cnn", choices=["dnn", "mclr", "cnn"])
+    parser.add_argument("--dataset", type=str, default="Mnist", choices=["Mnist", "FMnist", "Cifar10"])
+    parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
+    parser.add_argument("--model", type=str, default="dnn", choices=["dnn", "mclr", "cnn"])
     parser.add_argument("--batch_size", type=int, default=20)
     parser.add_argument("--learning_rate", type=float, default=0.005, help="Local learning rate")
     parser.add_argument("--beta", type=float, default=1.0, help="Average moving parameter for pFedMe, or Second learning rate of Per-FedAvg")
@@ -73,10 +69,10 @@ if __name__ == "__main__":
     parser.add_argument("--local_epochs", type=int, default=20)
     parser.add_argument("--optimizer", type=str, default="SGD")
     parser.add_argument("--algorithm", type=str, default="pFedMe",choices=["pFedMe", "PerAvg", "FedAvg"]) 
-    parser.add_argument("--numusers", type=int, default=20, help="Number of Users per round")
+    parser.add_argument("--numusers", type=int, default=10, help="Number of Users per round")
     parser.add_argument("--K", type=int, default=5, help="Computation steps")
     parser.add_argument("--personal_learning_rate", type=float, default=0.09, help="Persionalized learning rate to caculate theta aproximately using K steps")
-    parser.add_argument("--times", type=int, default=5, help="running time")
+    parser.add_argument("--times", type=int, default=1, help="running time")
     parser.add_argument("--gpu", type=int, default=0, help="Which GPU to run the experiments, -1 mean CPU, 0,1,2 for GPU")
     args = parser.parse_args()
 
@@ -95,6 +91,7 @@ if __name__ == "__main__":
 
     main(
         dataset=args.dataset,
+        datasize=args.datasize,
         algorithm = args.algorithm,
         model=args.model,
         batch_size=args.batch_size,
