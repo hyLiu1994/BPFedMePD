@@ -14,7 +14,7 @@ def simple_read_data(alg):
     rs_train_loss = np.array(hf.get('rs_train_loss')[:])
     return rs_train_acc, rs_train_loss, rs_glob_acc
 
-def get_training_data_value(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[], learning_rate=[],beta=[],algorithms_list=[], batch_size=[], dataset="", k= [] , personal_learning_rate = []):
+def get_training_data_value(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[], learning_rate=[],beta=[],algorithms_list=[], batch_size=[], dataset="", datasize="", k= [] , personal_learning_rate = []):
     Numb_Algs = len(algorithms_list)
     train_acc = np.zeros((Numb_Algs, Numb_Glob_Iters))
     train_loss = np.zeros((Numb_Algs, Numb_Glob_Iters))
@@ -29,7 +29,7 @@ def get_training_data_value(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[
             algorithms_list[i] = algorithms_list[i] + "_" + string_learning_rate + "_" + str(num_users) + "u" + "_" + str(batch_size[i]) + "b"  "_" +str(loc_ep1[i])
 
         train_acc[i, :], train_loss[i, :], glob_acc[i, :] = np.array(
-            simple_read_data(dataset +"_"+ algorithms_list[i] + "_avg"))[:, :Numb_Glob_Iters]
+            simple_read_data(dataset + "_" + datasize +"_"+ algorithms_list[i] + "_avg"))[:, :Numb_Glob_Iters]
         algs_lbl[i] = algs_lbl[i]
     return glob_acc, train_acc, train_loss
 
@@ -61,7 +61,7 @@ def get_data_label_style(input_data = [], linestyles= [], algs_lbl = [], lamb = 
 
     return data, lstyles, labels
 
-def average_data(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb="", learning_rate="", beta="", algorithms="", batch_size=0, dataset = "", datasize="", k = "", personal_learning_rate = "", times = 5):
+def average_data(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb="", learning_rate="", beta="", algorithms="", batch_size=0, dataset = "", datasize = "", k = "", personal_learning_rate = "", times = 5):
     if(algorithms == "PerAvg"):
         algorithms = "PerAvg_p"
     glob_acc, train_acc, train_loss = get_all_training_data_value(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms, batch_size, dataset, datasize, k, personal_learning_rate,times)
@@ -76,7 +76,7 @@ def average_data(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb="", learning
     print("std:", np.std(max_accurancy))
     print("Mean:", np.mean(max_accurancy))
 
-    alg = dataset + "_" + algorithms
+    alg = dataset + "_" + datasize + "_" + algorithms
     alg = alg + "_" + str(learning_rate) + "_" + str(beta) + "_" + str(lamb) + "_" + str(num_users) + "u" + "_" + str(batch_size) + "b" + "_" + str(loc_ep1)
     if(algorithms == "pFedMe" or algorithms == "pFedMe_p"):
         alg = alg + "_" + str(k) + "_" + str(personal_learning_rate)
@@ -88,10 +88,10 @@ def average_data(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb="", learning
             hf.create_dataset('rs_train_loss', data=train_loss_data)
             hf.close()
 
-def plot_summary_one_figure(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[], learning_rate=[], beta=[], algorithms_list=[], batch_size=0, dataset = "", k = [], personal_learning_rate = []):
+def plot_summary_one_figure(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[], learning_rate=[], beta=[], algorithms_list=[], batch_size=0, dataset = "", datasize = "", k = [], personal_learning_rate = []):
     Numb_Algs = len(algorithms_list)
     dataset = dataset
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     
     glob_acc =  average_smooth(glob_acc_, window='flat')
     train_loss = average_smooth(train_loss_, window='flat')
@@ -121,9 +121,9 @@ def plot_summary_one_figure(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[
     plt.legend(loc='upper right')
     plt.ylabel('Training Loss')
     plt.xlabel('Global rounds')
-    plt.title(dataset.upper())
+    plt.title(dataset.upper() + datasize.upper())
     #plt.ylim([train_loss.min(), 0.5])
-    plt.savefig(dataset.upper() + str(loc_ep1[1]) + 'train_loss.png', bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + str(loc_ep1[1]) + 'train_loss.png', bbox_inches="tight")
     #plt.savefig(dataset + str(loc_ep1[1]) + 'train_loss.pdf')
     plt.figure(3)
     plt.grid(True)
@@ -135,14 +135,14 @@ def plot_summary_one_figure(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[
     #plt.ylim([0.6, glob_acc.max()])
     plt.ylabel('Test Accuracy')
     plt.xlabel('Global rounds ')
-    plt.title(dataset.upper())
-    plt.savefig(dataset.upper() + str(loc_ep1[1]) + 'glob_acc.png', bbox_inches="tight")
+    plt.title(dataset.upper() + datasize.upper())
+    plt.savefig(dataset.upper() + datasize.upper() + str(loc_ep1[1]) + 'glob_acc.png', bbox_inches="tight")
     #plt.savefig(dataset + str(loc_ep1[1]) + 'glob_acc.pdf')
 
-def get_max_value_index(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[], learning_rate=[], algorithms_list=[], batch_size=0, dataset=""):
+def get_max_value_index(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[], learning_rate=[], algorithms_list=[], batch_size=0, dataset="", datasize=""):
     Numb_Algs = len(algorithms_list)
     glob_acc, train_acc, train_loss = get_training_data_value(
-        num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, algorithms_list, batch_size, dataset)
+        num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, algorithms_list, batch_size, dataset, datasize)
     for i in range(Numb_Algs):
         print("Algorithm: ", algorithms_list[i], "Max testing Accurancy: ", glob_acc[i].max(
         ), "Index: ", np.argmax(glob_acc[i]), "local update:", loc_ep1[i])
@@ -177,10 +177,10 @@ def average_smooth(data, window_len=20, window='hanning'):
         results.append(y[window_len-1:])
     return np.array(results)
 
-def plot_summary_one_figure_synthetic_R(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_synthetic_R(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     
     glob_acc =  average_smooth(glob_acc_, window='flat')
     train_loss = average_smooth(train_loss_, window='flat')
@@ -201,7 +201,7 @@ def plot_summary_one_figure_synthetic_R(num_users, loc_ep1, Numb_Glob_Iters, lam
     plt.xlabel('Global rounds')
     plt.ylim([train_loss.min() - 0.01,  2])
     #plt.ylim([0.5,  1.8])
-    plt.savefig(dataset.upper() + "Non_Convex_Syn_fixR.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Non_Convex_Syn_fixR.pdf", bbox_inches="tight")
 
     plt.figure(2,figsize=(5, 5))
     # Global accurancy
@@ -214,15 +214,15 @@ def plot_summary_one_figure_synthetic_R(num_users, loc_ep1, Numb_Glob_Iters, lam
     plt.xlabel('Global rounds')
     plt.ylim([0.6,  0.86])
     #plt.ylim([0.89,  0.945])
-    plt.savefig(dataset.upper() + "Non_Convex_Syn_fixR_test.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Non_Convex_Syn_fixR_test.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Convex_Syn_fixR.pdf", bbox_inches="tight")
     plt.close()
 
-def plot_summary_one_figure_synthetic_K(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_synthetic_K(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
     
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     
     glob_acc =  average_smooth(glob_acc_, window='flat')
     train_loss = average_smooth(train_loss_, window='flat')
@@ -243,7 +243,7 @@ def plot_summary_one_figure_synthetic_K(num_users, loc_ep1, Numb_Glob_Iters, lam
     #plt.ylim([0.5,  1.8])
     plt.ylim([train_loss.min() - 0.01,  2])
     #plt.savefig(dataset.upper() + "Non_Convex_Syn_fixK.pdf", bbox_inches="tight")
-    plt.savefig(dataset.upper() + "Convex_Syn_fixK.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Syn_fixK.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
     # Global accurancy
     for i in range(Numb_Algs):
@@ -254,14 +254,14 @@ def plot_summary_one_figure_synthetic_K(num_users, loc_ep1, Numb_Glob_Iters, lam
     plt.ylabel('Test Accuracy')
     plt.xlabel('Global rounds')
     plt.ylim([0.6,  0.86])
-    plt.savefig(dataset.upper() + "Convex_Syn_fixK_test.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Syn_fixK_test.pdf", bbox_inches="tight")
     plt.close()
 
-def plot_summary_one_figure_synthetic_L(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_synthetic_L(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
     
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     
     glob_acc =  average_smooth(glob_acc_, window='flat')
     train_loss = average_smooth(train_loss_, window='flat')
@@ -282,7 +282,7 @@ def plot_summary_one_figure_synthetic_L(num_users, loc_ep1, Numb_Glob_Iters, lam
     plt.ylim([0.5,  1.8])
     #plt.ylim([train_loss.min() - 0.01,  2])
     #plt.savefig(dataset.upper() + "Non_Convex_Syn_fixL.pdf", bbox_inches="tight")
-    plt.savefig(dataset.upper() + "Convex_Syn_fixL.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Syn_fixL.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
     # Global accurancy
     for i in range(Numb_Algs):
@@ -293,14 +293,14 @@ def plot_summary_one_figure_synthetic_L(num_users, loc_ep1, Numb_Glob_Iters, lam
     plt.ylabel('Test Accuracy')
     plt.xlabel('Global rounds')
     plt.ylim([0.6,  0.86])
-    plt.savefig(dataset.upper() + "Convex_Syn_fixL_test.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Syn_fixL_test.pdf", bbox_inches="tight")
     plt.close()
 
-def plot_summary_one_figure_synthetic_D(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_synthetic_D(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
     
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     
     glob_acc =  average_smooth(glob_acc_, window='flat')
     train_loss = average_smooth(train_loss_, window='flat')
@@ -321,7 +321,7 @@ def plot_summary_one_figure_synthetic_D(num_users, loc_ep1, Numb_Glob_Iters, lam
     plt.ylim([0.5,  1.8])
     #plt.ylim([train_loss.min() - 0.01,  2])
     #plt.savefig(dataset.upper() + "Non_Convex_Syn_fixL.pdf", bbox_inches="tight")
-    plt.savefig(dataset.upper() + "Convex_Syn_fixL.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Syn_fixL.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
     # Global accurancy
     for i in range(Numb_Algs):
@@ -332,13 +332,13 @@ def plot_summary_one_figure_synthetic_D(num_users, loc_ep1, Numb_Glob_Iters, lam
     plt.ylabel('Test Accuracy')
     plt.xlabel('Global rounds')
     plt.ylim([0.6,  0.86])
-    plt.savefig(dataset.upper() + "Convex_Syn_fixL_test.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Syn_fixL_test.pdf", bbox_inches="tight")
     plt.close()
 
-def plot_summary_one_figure_synthetic_Compare(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_synthetic_Compare(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     for i in range(Numb_Algs):
         print("max accurancy:", train_acc_[i].max())
     glob_acc =  average_smooth(glob_acc_, window='flat')
@@ -364,7 +364,7 @@ def plot_summary_one_figure_synthetic_Compare(num_users, loc_ep1, Numb_Glob_Iter
     #plt.ylim([0.4,  1.8]) # non convex
     #plt.ylim([train_loss.min() - 0.01,  2])
     #plt.savefig(dataset.upper() + "Non_Convex_Syn_train_Com.pdf", bbox_inches="tight")
-    plt.savefig(dataset.upper() + "Convex_Syn_train_Com.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Syn_train_Com.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
     plt.title("$\mu-$"+ "strongly convex")
     # plt.title("Nonconvex") # for non convex case
@@ -378,15 +378,15 @@ def plot_summary_one_figure_synthetic_Compare(num_users, loc_ep1, Numb_Glob_Iter
     plt.xlabel('Global rounds')
     plt.ylim([0.5,  0.86]) # convex 
     #plt.savefig(dataset.upper() + "Non_Convex_Syn_test_Com.pdf", bbox_inches="tight")
-    plt.savefig(dataset.upper() + "Convex_Syn_test_Com.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Syn_test_Com.pdf", bbox_inches="tight")
     plt.close()
 
 
-def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
     
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     for i in range(Numb_Algs):
         print("max accurancy:", glob_acc_[i].max())
     glob_acc =  average_smooth(glob_acc_, window='flat')
@@ -412,9 +412,9 @@ def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, l
     plt.ylabel('Training Loss')
     plt.xlabel('Global rounds')
     #plt.ylim([0.05,  0.6]) # non convex-case
-    plt.ylim([0.19,  0.4]) # convex-case
+    # plt.ylim([0.19,  0.4]) # convex-case
     plt.gca().yaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}')) # 2 decimal places
-    plt.savefig(dataset.upper() + "Convex_Mnist_train_Com.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_train_Com.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_train_Com.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
     plt.title("$\mu-$"+ "strongly convex")
@@ -428,16 +428,17 @@ def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, l
     plt.ylabel('Test Accuracy')
     plt.xlabel('Global rounds')
     #plt.ylim([0.84,  0.98]) # non convex-case
-    plt.ylim([0.88,  0.95]) # Convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_test_Com.pdf", bbox_inches="tight")
-    #plt.savefig(dataset.upper() + "Non_Convex_Mnist_test_Com.pdf", bbox_inches="tight")
+    #plt.ylim([0.88,  0.95]) # Convex-case
+    print(dataset.upper() + datasize.upper() + "Convex_Mnist_test_Com.pdf")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_test_Com.pdf", bbox_inches="tight")
+    # plt.savefig(dataset.upper() + "Non_Convex_Mnist_test_Com.pdf", bbox_inches="tight")
     plt.close()
 
-def plot_summary_one_figure_mnist_K(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_mnist_K(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
     
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     
     glob_acc =  average_smooth(glob_acc_, window='flat')
     train_loss = average_smooth(train_loss_, window='flat')
@@ -462,7 +463,7 @@ def plot_summary_one_figure_mnist_K(num_users, loc_ep1, Numb_Glob_Iters, lamb, l
     plt.xlabel('Global rounds')
     #plt.ylim([0.05,  0.6]) # non convex-case
     plt.ylim([0.19,  0.5]) # convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_train_K.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() +  "Convex_Mnist_train_K.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_train_K.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
     plt.grid(True)
@@ -477,15 +478,15 @@ def plot_summary_one_figure_mnist_K(num_users, loc_ep1, Numb_Glob_Iters, lamb, l
     plt.xlabel('Global rounds')
     # plt.ylim([0.84,  0.98]) # non convex-case
     plt.ylim([0.86,  0.95]) # Convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_test_K.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_test_K.pdf", bbox_inches="tight")
    #plt.savefig(dataset.upper() + "Non_Convex_Mnist_test_K.pdf", bbox_inches="tight")
     plt.close()
 
-def plot_summary_one_figure_mnist_R(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_mnist_R(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
     
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     
     glob_acc =  average_smooth(glob_acc_, window='flat')
     train_loss = average_smooth(train_loss_, window='flat')
@@ -508,7 +509,7 @@ def plot_summary_one_figure_mnist_R(num_users, loc_ep1, Numb_Glob_Iters, lamb, l
     plt.xlabel('Global rounds')
     #plt.ylim([0.05,  0.6]) # non convex-case
     plt.ylim([0.17,  0.5]) # convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_train_R.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_train_R.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_train_R.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
     plt.grid(True)
@@ -523,15 +524,15 @@ def plot_summary_one_figure_mnist_R(num_users, loc_ep1, Numb_Glob_Iters, lamb, l
     plt.xlabel('Global rounds')
     # plt.ylim([0.84,  0.985]) # non convex-case
     plt.ylim([0.86,  0.955]) # Convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_test_R.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_test_R.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_test_R.pdf", bbox_inches="tight")
     plt.close()
 
-def plot_summary_one_figure_mnist_L(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_mnist_L(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
 
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     
     glob_acc =  average_smooth(glob_acc_, window='flat')
     train_loss = average_smooth(train_loss_, window='flat')
@@ -554,7 +555,7 @@ def plot_summary_one_figure_mnist_L(num_users, loc_ep1, Numb_Glob_Iters, lamb, l
     plt.xlabel('Global rounds')
     #plt.ylim([0.05,  0.6]) # non convex-case
     plt.ylim([0.19,  0.5]) # convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_train_L.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_train_L.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_train_L.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
     plt.grid(True)
@@ -569,15 +570,15 @@ def plot_summary_one_figure_mnist_L(num_users, loc_ep1, Numb_Glob_Iters, lamb, l
     plt.xlabel('Global rounds')
     #plt.ylim([0.84,  0.98]) # non convex-case
     plt.ylim([0.86,  0.95]) # Convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_test_L.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_test_L.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_test_L.pdf", bbox_inches="tight")
     plt.close()
 
-def plot_summary_one_figure_mnist_D(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_mnist_D(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
     
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     
     glob_acc =  average_smooth(glob_acc_, window='flat')
     train_loss = average_smooth(train_loss_, window='flat')
@@ -599,7 +600,7 @@ def plot_summary_one_figure_mnist_D(num_users, loc_ep1, Numb_Glob_Iters, lamb, l
     plt.xlabel('Global rounds')
     #plt.ylim([0.05,  0.6]) # non convex-case
     plt.ylim([0.19,  0.5]) # convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_train_D.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_train_D.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_train_D.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
     plt.grid(True)
@@ -614,16 +615,16 @@ def plot_summary_one_figure_mnist_D(num_users, loc_ep1, Numb_Glob_Iters, lamb, l
     plt.xlabel('Global rounds')
     # plt.ylim([0.84,  0.98]) # non convex-case
     plt.ylim([0.86,  0.95]) # Convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_test_D.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_test_D.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_test_D.pdf", bbox_inches="tight")
     plt.close()
 
 
-def plot_summary_one_figure_mnist_Beta(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate):
+def plot_summary_one_figure_mnist_Beta(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
     Numb_Algs = len(algorithms_list)   
     dataset = dataset
     
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
     
     glob_acc =  average_smooth(glob_acc_,window_len=10, window='flat')
     train_loss = average_smooth(train_loss_,window_len=10, window='flat')
@@ -647,7 +648,7 @@ def plot_summary_one_figure_mnist_Beta(num_users, loc_ep1, Numb_Glob_Iters, lamb
     plt.xlabel('Global rounds')
     #plt.ylim([0.05,  0.6]) # non convex-case
     plt.ylim([0.18,  0.5]) # convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_train_Beta.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_train_Beta.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_train_Beta.pdf", bbox_inches="tight")
     plt.figure(2,figsize=(5, 5))
     plt.grid(True)
@@ -662,6 +663,6 @@ def plot_summary_one_figure_mnist_Beta(num_users, loc_ep1, Numb_Glob_Iters, lamb
     plt.xlabel('Global rounds')
     # plt.ylim([0.84,  0.985]) # non convex-case
     plt.ylim([0.88,  0.946]) # Convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_test_Beta.pdf", bbox_inches="tight")
+    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_test_Beta.pdf", bbox_inches="tight")
     #plt.savefig(dataset.upper() + "Non_Convex_Mnist_test_Beta.pdf", bbox_inches="tight")
     plt.close()
