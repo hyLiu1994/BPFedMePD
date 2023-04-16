@@ -6,14 +6,16 @@ import json
 from torch.utils.data import DataLoader
 import numpy as np
 import copy
+from torch.autograd import Variable
 
 class User:
     """
     Base class for users in federated learning.
     """
-    def __init__(self, device, id, train_data, test_data, model, batch_size = 0, learning_rate = 0, beta = 0 , lamda = 0, local_epochs = 0):
+    def __init__(self, device, id, train_data, test_data, model, batch_size = 0, learning_rate = 0, beta = 0 , lamda = 0, local_epochs = 0, output_dim = 10):
 
         self.device = device
+        self.output_dim = output_dim
         self.model = copy.deepcopy(model)
         self.id = id  # integer
         self.train_samples = len(train_data)
@@ -34,12 +36,39 @@ class User:
         self.local_model = copy.deepcopy(list(self.model.parameters()))
         self.persionalized_model = copy.deepcopy(list(self.model.parameters()))
         self.persionalized_model_bar = copy.deepcopy(list(self.model.parameters()))
+
+        self.personal_model = copy.deepcopy(model)
+        # self.local_model = copy.deepcopy(model)
+        self.N_Batch = len(train_data) // batch_size
+        self.data_size = len(train_data)
+        data_dim = 784
+        hidden_dim = 100
+        total = (data_dim + 1) * hidden_dim + (hidden_dim + 1) * hidden_dim + (hidden_dim + 1) * hidden_dim + (
+                hidden_dim + 1) * 1
+        L = 3
+        a = np.log(total) + 0.1 * ((L + 1) * np.log(hidden_dim) + np.log(np.sqrt(self.data_size) * data_dim))
+        lm = 1 / np.exp(a)
+        self.phi_prior = torch.tensor(lm).to(self.device)
+        self.temp = 0.5
     
-    def set_parameters(self, model):
+    def set_parameters(self, model, personalized = False):
+        idx = 1
+        num_param = len(self.local_model)
         for old_param, new_param, local_param in zip(self.model.parameters(), model.parameters(), self.local_model):
+            if (personalized and idx >= num_param - 1):
+                break
             old_param.data = new_param.data.clone()
             local_param.data = new_param.data.clone()
+            idx += 1
         #self.local_weight_updated = copy.deepcopy(self.optimizer.param_groups[0]['params'])
+    
+    def set_parameters_pFed(self, model):
+        for user_layer, server_layer in zip(self.model.layers, model.layers):
+            for personal_param, local_param, new_param in zip(user_layer.personal.parameters(),
+                                                              user_layer.local.parameters(),
+                                                              server_layer.local.parameters()):
+                personal_param.data = new_param.data.clone()
+                local_param.data = new_param.data.clone()
 
     def get_parameters(self):
         for param in self.model.parameters():
@@ -79,6 +108,106 @@ class User:
             #print(self.id + ", Test Loss:", loss)
         return test_acc, y.shape[0]
 
+    def testBayes(self):
+        self.model.eval()
+        test_acc = 0
+        for x, y in self.testloaderfull:
+            test_size = x.size()[0]
+            test_X = Variable(x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
+            test_Y = Variable(y.view(test_size, -1)).to(self.device)
+            # output = self.model.forward(test_X, mode='MAP').data.argmax(axis=1)
+
+            epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
+            # compute softplus for variance
+            sigmas = self.model.transform_rhos(self.model.rhos)
+            # obtain a sample from q(w|theta) by transforming the epsilons
+            layer_params = self.model.transform_gaussian_samples(self.model.mus, sigmas, epsilons)
+            # forward-propagate the batch
+            output = self.model.net(test_X, layer_params)
+            output = F.softmax(output, dim=1).data.argmax(axis=1)
+            y = test_Y.data.view(test_size)
+            test_acc += (torch.sum(output == y)).item()
+
+            # test_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
+            # @loss += self.loss(output, y)
+            # print(self.id + ", Test Accuracy:", test_acc / y.shape[0] )
+            # print(self.id + ", Test Loss:", loss)
+        return test_acc, y.shape[0]
+    
+    def testpFedbayes(self):
+        self.model.eval()
+        test_acc_personal = 0
+        test_acc_global = 0
+        for x, y in self.testloaderfull:
+            test_size = x.size()[0]
+            test_X = Variable(x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
+            test_Y = Variable(y.view(test_size, -1)).to(self.device)
+
+            # personal model
+            epsilons = self.personal_model.sample_epsilons(self.model.layer_param_shapes)
+            # obtain a sample from q(w|theta) by transforming the epsilons
+            layer_params1 = self.personal_model.transform_gaussian_samples(self.personal_model.mus,
+                                                                           self.personal_model.rhos, epsilons)
+            # forward-propagate the batch
+            output = self.personal_model.net(test_X, layer_params1)
+            output = F.softmax(output, dim=1).data.argmax(axis=1)
+            y = test_Y.data.view(test_size)
+            test_acc_personal += (torch.sum(output == y)).item()
+
+            # global model
+            epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
+            # obtain a sample from q(w|theta) by transforming the epsilons
+            layer_params1 = self.model.transform_gaussian_samples(self.model.mus, self.model.rhos, epsilons)
+            # forward-propagate the batch
+            output = self.model.net(test_X, layer_params1)
+            output = F.softmax(output, dim=1).data.argmax(axis=1)
+            # y = test_Y.data.view(test_size)
+            test_acc_global += (torch.sum(output == y)).item()
+
+        return test_acc_personal, test_acc_global, y.shape[0]
+
+    def testSparseBayes(self):
+        # self.model.eval()
+        test_acc = 0
+        for x, y in self.testloaderfull:
+            test_size = x.size()[0]
+            test_X = Variable(x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
+            test_Y = Variable(y.view(test_size, -1)).to(self.device)
+            output = self.model.forward(test_X, mode='MAP').data.argmax(axis=1)
+            # loss, pred = self.model.sample_elbo(test_X, test_Y, 30, self.temp, self.phi_prior, self.N_Batch)
+            # pred = pred.mean(dim=0)
+            # output = pred.data.argmax(axis=1)
+            y = test_Y.data.view(test_size)
+
+            test_acc += (torch.sum(output == y)).item()
+
+            # test_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
+            # @loss += self.loss(output, y)
+            # print(self.id + ", Test Accuracy:", test_acc / y.shape[0] )
+            # print(self.id + ", Test Loss:", loss)
+        return test_acc, y.shape[0]
+
+    def testpFedSbayes(self):
+        # self.model.eval()
+        test_acc = 0
+        for x, y in self.testloaderfull:
+            test_size = x.size()[0]
+            test_X = Variable(x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
+            test_Y = Variable(y.view(test_size, -1)).to(self.device)
+            # output = self.model.forward(test_X, mode='MAP').data.argmax(axis=1)
+            loss, pred = self.model.sample_elbo(test_X, test_Y, 30, self.temp, self.phi_prior, self.N_Batch)
+            pred = pred.mean(dim=0)
+            output = pred.data.argmax(axis=1)
+            y = test_Y.data.view(test_size)
+
+            test_acc += (torch.sum(output == y)).item()
+
+            # test_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
+            # @loss += self.loss(output, y)
+            # print(self.id + ", Test Accuracy:", test_acc / y.shape[0] )
+            # print(self.id + ", Test Loss:", loss)
+        return test_acc, y.shape[0]
+
     def train_error_and_loss(self):
         self.model.eval()
         train_acc = 0
@@ -91,7 +220,111 @@ class User:
             #print(self.id + ", Train Accuracy:", train_acc)
             #print(self.id + ", Train Loss:", loss)
         return train_acc, loss , self.train_samples
-    
+
+    def train_error_and_loss_bayes(self):
+        self.model.eval()
+        train_acc = 0
+        loss = 0
+        for x, y in self.trainloaderfull:
+            size = x.size()[0]
+            train_X = Variable(x.view(size, -1).type(torch.FloatTensor)).to(self.device)
+            train_Y = Variable(y.view(size, -1)).to(self.device)
+
+            label_one_hot = F.one_hot(train_Y, num_classes=self.output_dim).squeeze(dim=1)
+            epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
+            # compute softplus for variance
+            sigmas = self.model.transform_rhos(self.model.rhos)
+            # obtain a sample from q(w|theta) by transforming the epsilons
+            layer_params = self.model.transform_gaussian_samples(self.model.mus, sigmas, epsilons)
+            # forward-propagate the batch
+            output = self.model.net(train_X, layer_params)
+            # calculate the loss
+            loss = self.model.combined_loss(output, label_one_hot, layer_params, self.model.mus, sigmas,
+                                            self.local_epochs)
+
+            output = F.softmax(output, dim=1).data.argmax(axis=1)
+            y = train_Y.data.view(size)
+            train_acc += (torch.sum(output == y)).item()
+            # print(self.id + ", Train Accuracy:", train_acc)
+            # print(self.id + ", Train Loss:", loss)
+        return train_acc, loss, self.train_samples
+
+    def train_error_and_loss_pFedbayes(self):
+        self.model.eval()
+        correct_items = 0
+        total_loss = 0
+        total_samples = 0
+        for x, y in self.trainloader:
+            size = x.size()[0]
+            train_X = Variable(x.view(size, -1).type(torch.FloatTensor)).to(self.device)
+            train_Y = Variable(y.view(size, -1)).to(self.device)
+            # print("output_dim", self.output_dim)
+            label_one_hot = F.one_hot(train_Y, num_classes=self.output_dim).squeeze(dim=1)
+            ### personal model
+            epsilons = self.personal_model.sample_epsilons(self.model.layer_param_shapes)
+            # obtain a sample from q(w|theta) by transforming the epsilons
+            layer_params1 = self.personal_model.transform_gaussian_samples(self.personal_model.mus,
+                                                                           self.personal_model.rhos, epsilons)
+            # forward-propagate the batch
+            output = self.personal_model.net(train_X, layer_params1)
+            # calculate the loss
+            loss = self.personal_model.combined_loss_personal(output, label_one_hot, layer_params1,
+                                                              self.personal_model.mus, self.personal_model.sigmas,
+                                                              self.model.mus, self.model.sigmas, self.local_epochs)
+            output = F.softmax(output, dim=1).data.argmax(axis=1)
+            y = train_Y.data.view(size)
+            correct_items += (torch.sum(output == y)).item()
+            total_loss += loss.item()
+            total_samples += len(x)
+            # output = self.model.forward(train_X, mode='MAP').data.argmax(axis=1)
+            # y = train_Y.data.view(size)
+            # train_acc += (torch.sum(output == y)).item()
+            #
+            # loss += self.loss.loss_fn(output, y, 1.0)
+            # print(self.id + ", Train Accuracy:", train_acc)
+            # print(self.id + ", Train Loss:", loss)
+
+        return correct_items, total_loss, total_samples
+
+    def train_error_and_loss_sparsebayes(self):
+        self.model.eval()
+        train_acc = 0
+        loss = 0
+        for x, y in self.trainloaderfull:
+            size = x.size()[0]
+            train_X = Variable(x.view(size, -1).type(torch.FloatTensor)).to(self.device)
+            train_Y = Variable(y.view(size, -1)).to(self.device)
+            output = self.model.forward(train_X, mode='MAP').data.argmax(axis=1)
+            # loss_temp, pred = self.model.sample_elbo(train_X, train_Y, 30, self.temp, self.phi_prior, self.N_Batch)
+            # pred = pred.mean(dim=0)
+            # output = pred.data.argmax(axis=1)
+            y = train_Y.data.view(size)
+            train_acc += (torch.sum(output == y)).item()
+
+            loss += self.loss.loss_fn(output, y, 1.0)
+            # print(self.id + ", Train Accuracy:", train_acc)
+            # print(self.id + ", Train Loss:", loss)
+        return train_acc, loss, self.train_samples
+
+    def train_error_and_loss_pFedSbayes(self):
+        self.model.eval()
+        train_acc = 0
+        loss = 0
+        for x, y in self.trainloaderfull:
+            size = x.size()[0]
+            train_X = Variable(x.view(size, -1).type(torch.FloatTensor)).to(self.device)
+            train_Y = Variable(y.view(size, -1)).to(self.device)
+            loss_temp, pred = self.model.sample_elbo(train_X, train_Y, 30, self.temp, self.phi_prior, self.N_Batch)
+            pred = pred.mean(dim=0)
+            output = pred.data.argmax(axis=1)
+            y = train_Y.data.view(size)
+            train_acc += (torch.sum(output == y)).item()
+
+            loss += loss_temp
+            # print(self.id + ", Train Accuracy:", train_acc)
+            # print(self.id + ", Train Loss:", loss)
+        return train_acc, loss, self.train_samples
+
     def test_persionalized_model(self):
         self.model.eval()
         test_acc = 0

@@ -4,7 +4,7 @@ from FLAlgorithms.trainmodel.models import *
 from FLAlgorithms.users.userbase import User
 
 
-class UserpFedBayes(User):
+class UserBPFedPD(User):
     def __init__(self, numeric_id, train_data, test_data, model, batch_size, learning_rate, beta, lamda,
                  local_epochs, optimizer, personal_learning_rate, device, output_dim=10):
         super().__init__(device, numeric_id, train_data, test_data, model[0], batch_size, learning_rate, beta, lamda,
@@ -57,12 +57,11 @@ class UserpFedBayes(User):
                 personal_loss.backward()
                 self.optimizer1.step()
 
-
             ### local model
             epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
             layer_params2 = self.model.transform_gaussian_samples(self.model.mus, self.model.rhos, epsilons)
             model_output = self.model.net(batch_X, layer_params2)
-            # calculate the loss
+
             model_loss = self.model.combined_loss_local(
                 [t.clone().detach() for t in layer_params1],
                 copy.deepcopy(self.personal_model.mus),

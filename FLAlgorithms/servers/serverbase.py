@@ -25,7 +25,8 @@ class Server:
         self.beta = beta
         self.lamda = lamda
         self.algorithm = algorithm
-        self.rs_train_acc, self.rs_train_loss, self.rs_glob_acc,self.rs_train_acc_per, self.rs_train_loss_per, self.rs_glob_acc_per = [], [], [], [], [], []
+        # self.rs_train_acc, self.rs_train_loss, self.rs_glob_acc,                  self.rs_train_acc_per, self.rs_train_loss_per, self.rs_glob_acc_per = [], [], [], [], [], []
+        self.rs_train_acc, self.rs_train_loss, self.rs_glob_acc, self.rs_per_acc, self.rs_train_acc_per, self.rs_train_loss_per, self.rs_glob_acc_per = [], [], [], [], [], [], []
         self.times = times
         # Initialize the server's grads to zeros
         #for param in self.model.parameters():
@@ -45,10 +46,10 @@ class Server:
         for idx, param in enumerate(self.model.parameters()):
             param.grad = param.grad + user_grad[idx].clone() * ratio
 
-    def send_parameters(self):
+    def send_parameters(self, personalized = False):
         assert (self.users is not None and len(self.users) > 0)
         for user in self.users:
-            user.set_parameters(self.model)
+            user.set_parameters(self.model, personalized)
 
     def add_parameters(self, user, ratio):
         model = self.model.parameters()
@@ -261,3 +262,123 @@ class Server:
         print("Average Personal Accurancy: ", glob_acc)
         print("Average Personal Trainning Accurancy: ", train_acc)
         print("Average Personal Trainning Loss: ",train_loss)
+
+
+
+    def testBayes(self):
+        '''tests self.latest_model on given clients
+        '''
+        num_samples = []
+        tot_correct = []
+        losses = []
+        for c in self.users:
+            ct, ns = c.testBayes()
+            tot_correct.append(ct*1.0)
+            num_samples.append(ns)
+        ids = [c.id for c in self.users]
+
+        return ids, num_samples, tot_correct
+
+    def testpFedbayes(self):
+        '''tests self.latest_model on given clients
+        '''
+        num_samples = []
+        tot_correct_p = []
+        tot_correct_g = []
+        losses = []
+        for c in self.users:
+            ct_p, ct_g, ns = c.testpFedbayes()
+            tot_correct_p.append(ct_p * 1.0)
+            tot_correct_g.append(ct_g * 1.0)
+            num_samples.append(ns)
+        ids = [c.id for c in self.users]
+
+        return ids, num_samples, tot_correct_p, tot_correct_g
+
+    def testSparseBayes(self):
+        '''tests self.latest_model on given clients
+        '''
+        num_samples = []
+        tot_correct = []
+        losses = []
+        for c in self.users:
+            ct, ns = c.testSparseBayes()
+            tot_correct.append(ct*1.0)
+            num_samples.append(ns)
+        ids = [c.id for c in self.users]
+
+        return ids, num_samples, tot_correct
+
+
+    def testpFedSbayes(self):
+        '''tests self.latest_model on given clients
+        '''
+        num_samples = []
+        tot_correct = []
+        losses = []
+        for c in self.users:
+            ct, ns = c.testSparseBayes()
+            tot_correct.append(ct*1.0)
+            num_samples.append(ns)
+        ids = [c.id for c in self.users]
+
+        return ids, num_samples, tot_correct
+
+    def train_error_and_loss_bayes(self):
+        num_samples = []
+        tot_correct = []
+        losses = []
+        for c in self.users:
+            ct, cl, ns = c.train_error_and_loss_bayes()
+            tot_correct.append(ct * 1.0)
+            num_samples.append(ns)
+            losses.append(cl * 1.0)
+
+        ids = [c.id for c in self.users]
+        # groups = [c.group for c in self.clients]
+
+        return ids, num_samples, tot_correct, losses
+
+    def train_error_and_loss_pFedbayes(self):
+        num_samples = []
+        tot_correct = []
+        losses = []
+        for c in self.users:
+            ct, cl, ns = c.train_error_and_loss_pFedbayes()
+            tot_correct.append(ct)
+            num_samples.append(ns)
+            losses.append(cl)
+
+        ids = [c.id for c in self.users]
+        # groups = [c.group for c in self.clients]
+
+        return ids, num_samples, tot_correct, losses
+    def train_error_and_loss_sparsebayes(self):
+        num_samples = []
+        tot_correct = []
+        losses = []
+        for c in self.users:
+            ct, cl, ns = c.train_error_and_loss_sparsebayes()
+            tot_correct.append(ct * 1.0)
+            num_samples.append(ns)
+            losses.append(cl * 1.0)
+
+        ids = [c.id for c in self.users]
+        # groups = [c.group for c in self.clients]
+
+        return ids, num_samples, tot_correct, losses
+
+    def train_error_and_loss_pFedSbayes(self):
+        num_samples = []
+        tot_correct = []
+        losses = []
+        for c in self.users:
+            ct, cl, ns = c.train_error_and_loss_sparsebayes()
+            tot_correct.append(ct * 1.0)
+            num_samples.append(ns)
+            losses.append(cl * 1.0)
+
+        ids = [c.id for c in self.users]
+        # groups = [c.group for c in self.clients]
+
+        return ids, num_samples, tot_correct, losses
