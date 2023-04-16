@@ -71,6 +71,7 @@ def main(dataset, datasize, algorithm, model, batch_size, learning_rate, beta, l
     average_data(num_users=numusers, loc_ep1=local_epochs, Numb_Glob_Iters=num_glob_iters, lamb=lamda,learning_rate=learning_rate, beta = beta, algorithms=algorithm, batch_size=batch_size, dataset=dataset, datasize=datasize, k = K, personal_learning_rate = personal_learning_rate,times = times)
 
 if __name__ == "__main__":
+    # Setting hyperpameter 
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="Mnist", choices=["Mnist", "FMnist", "Cifar10"])
     parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
