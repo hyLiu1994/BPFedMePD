@@ -24,8 +24,8 @@ class pFedMe(Server):
             user = UserpFedMe(device, id, train, test, model, batch_size, learning_rate, beta, lamda, local_epochs, optimizer, K, personal_learning_rate)
             self.users.append(user)
             self.total_train_samples += user.train_samples
-        print("Number of users / total users:",num_users, " / " ,total_users)
-        print("Finished creating pFedMe server.")
+        # print("Number of users / total users:",num_users, " / " ,total_users)
+        # print("Finished creating pFedMe server.")
 
     def send_grads(self):
         assert (self.users is not None and len(self.users) > 0)

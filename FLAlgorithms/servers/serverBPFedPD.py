@@ -3,6 +3,7 @@ from tqdm import tqdm
 
 from FLAlgorithms.users.userBPFedPD import UserBPFedPD
 from FLAlgorithms.servers.serverbase import Server
+from FLAlgorithms.trainmodel.OModels import *
 from utils.model_utils import read_data, read_user_data
 import numpy as np
 
@@ -19,14 +20,15 @@ class BPFedPD(Server):
         data = read_data(dataset, datasize)
         self.personal_learning_rate = personal_learning_rate
         total_users = len(data[0])
+
         print('clients initializting...')
         for i in tqdm(range(total_users), total=total_users):
             id, train, test = read_user_data(i, data, dataset)
             user = UserBPFedPD(id, train, test, model, batch_size, learning_rate,beta,lamda, local_epochs, optimizer,
                                  personal_learning_rate, device, output_dim=output_dim)
             self.users.append(user)
-            self.total_train_samples += user.train_samples
-            
+            self.total_train_samples += user.train_samples 
+
         print("Number of users / total users:", num_users, " / " ,total_users)
         print("Finished creating FedAvg server.")
 
@@ -48,20 +50,31 @@ class BPFedPD(Server):
             print("-------------Round number: ",glob_iter, " -------------")
             self.send_parameters(personalized = True)
             # self.send_parameters(personalized = False)
+
             # Evaluate model each interation
-            self.evaluate_bayes()
+            if (isinstance(self.users[0].model, pBNN)):
+                self.evaluate_bayes(False)
+            else:
+                self.evaluate_bayes(True)
 
             self.selected_users = self.select_users(glob_iter, self.num_users)
             for user in self.selected_users:
-                user.train(self.local_epochs)
+                user.train()
+
             self.aggregate_parameters()
+            # self.evaluate_personalized_model()
 
         self.save_results()
         return self.save_model()
 
-    def evaluate_bayes(self):
-        stats = self.testpFedbayes()
-        stats_train = self.train_error_and_loss_pFedbayes()
+    def evaluate_bayes(self, ispcnn = "False"):
+        if (ispcnn): 
+            stats = self.testCifar10bayes() 
+            stats_train = self.train_error_and_loss_cifar10() 
+        else:
+            stats = self.testpFedbayes() 
+            stats_train = self.train_error_and_loss_pFedbayes() 
+        
         per_acc = np.sum(stats[2]) * 1.0 / np.sum(stats[1])
         glob_acc = np.sum(stats[3]) * 1.0 / np.sum(stats[1])
         train_acc = np.sum(stats_train[2]) * 1.0 / np.sum(stats_train[1])

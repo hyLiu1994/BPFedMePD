@@ -105,7 +105,6 @@ class Server:
         for server_param, user_param in zip(self.model.parameters(), user.local_weight_updated):
             server_param.data = server_param.data + user_param.data.clone() * ratio
 
-
     def persionalized_aggregate_parameters(self):
         assert (self.users is not None and len(self.users) > 0)
 
@@ -263,8 +262,6 @@ class Server:
         print("Average Personal Trainning Accurancy: ", train_acc)
         print("Average Personal Trainning Loss: ",train_loss)
 
-
-
     def testBayes(self):
         '''tests self.latest_model on given clients
         '''
@@ -294,6 +291,22 @@ class Server:
         ids = [c.id for c in self.users]
 
         return ids, num_samples, tot_correct_p, tot_correct_g
+    
+    def testCifar10bayes(self):
+        '''tests self.latest_model on given clients
+        '''
+        num_samples = []
+        tot_correct_p = []
+        tot_correct_g = []
+        losses = []
+        for c in self.users:
+            ct_p, ct_g, ns = c.testCifar10bayes()
+            tot_correct_p.append(ct_p * 1.0)
+            tot_correct_g.append(ct_g * 1.0)
+            num_samples.append(ns)
+        ids = [c.id for c in self.users]
+
+        return ids, num_samples, tot_correct_p, tot_correct_g
 
     def testSparseBayes(self):
         '''tests self.latest_model on given clients
@@ -308,7 +321,6 @@ class Server:
         ids = [c.id for c in self.users]
 
         return ids, num_samples, tot_correct
-
 
     def testpFedSbayes(self):
         '''tests self.latest_model on given clients
@@ -339,6 +351,21 @@ class Server:
 
         return ids, num_samples, tot_correct, losses
 
+    def train_error_and_loss_cifar10(self):
+        num_samples = []
+        tot_correct = []
+        losses = []
+        for c in self.users:
+            ct, cl, ns = c.train_error_and_loss_cifar10()
+            tot_correct.append(ct)
+            num_samples.append(ns)
+            losses.append(cl)
+
+        ids = [c.id for c in self.users]
+        # groups = [c.group for c in self.clients]
+
+        return ids, num_samples, tot_correct, losses
+
     def train_error_and_loss_pFedbayes(self):
         num_samples = []
         tot_correct = []
@@ -353,6 +380,7 @@ class Server:
         # groups = [c.group for c in self.clients]
 
         return ids, num_samples, tot_correct, losses
+
     def train_error_and_loss_sparsebayes(self):
         num_samples = []
         tot_correct = []

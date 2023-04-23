@@ -91,8 +91,8 @@ def read_cifa_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 20 # should be muitiple of 10
-    NUM_LABELS = 3
+    NUM_USERS = 10 # should be muitiple of 10
+    NUM_LABELS = 5
     # Setup directory for train/test data
     train_path = './data/train/cifa_train_100.json'
     test_path = './data/test/cifa_test_100.json'

@@ -36,8 +36,8 @@ class UserpFedMe(User):
     def train(self, epochs):
         LOSS = 0
         self.model.train()
-        for epoch in range(1, self.local_epochs + 1):  # local update
-            
+        for epoch in range(1, self.local_epochs + 1):  # local update 
+
             self.model.train()
             X, y = self.get_next_train_batch()
 
@@ -54,7 +54,6 @@ class UserpFedMe(User):
                 localweight.data = localweight.data - self.lamda * self.learning_rate * (localweight.data - new_param.data)
 
         #update local model as local_weight_upated
-        #self.clone_model_paramenter(self.local_weight_updated, self.local_model)
         self.update_parameters(self.local_model)
 
         return LOSS

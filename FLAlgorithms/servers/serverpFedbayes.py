@@ -3,6 +3,7 @@ from tqdm import tqdm
 
 from FLAlgorithms.users.userpFedbayes import UserpFedBayes
 from FLAlgorithms.servers.serverbase import Server
+from FLAlgorithms.trainmodel.OModels import *
 from utils.model_utils import read_data, read_user_data
 import numpy as np
 
@@ -48,7 +49,10 @@ class pFedBayes(Server):
             print("-------------Round number: ",glob_iter, " -------------")
             self.send_parameters()
             # Evaluate model each interation
-            self.evaluate_bayes()
+            if (isinstance(self.users[0].model, pBNN)):
+                self.evaluate_bayes()
+            else:
+                self.evaluate()
 
             self.selected_users = self.select_users(glob_iter, self.num_users)
             for user in self.selected_users:

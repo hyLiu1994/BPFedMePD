@@ -9,12 +9,16 @@ import torchvision.transforms as transforms
 
 random.seed(1)
 np.random.seed(1)
-NUM_USERS = 10
+NUM_USERS = 16
 NUM_LABELS = 5
+TOTL_NUM_LABELS = 10
 
 data_size_str_list = ['small', 'large']
 train_data_per_client_per_label_list = [25, 475]
 test_data_per_client_per_label_list = [450, 150]
+data_size_str_list = ['large']
+train_data_per_client_per_label_list = [475]
+test_data_per_client_per_label_list = [150]
 
 for idx in range(len(data_size_str_list)):
     data_size_str = data_size_str_list[idx]
@@ -33,8 +37,8 @@ for idx in range(len(data_size_str_list)):
         testset.data, testset.targets = train_data
 
     # Setup directory for train/test data
-    train_path = 'data/train/cifar10_train_' + data_size_str + '.json'
-    test_path = 'data/test/cifar10_test_' + data_size_str + '.json'
+    train_path = 'data/train/cifar10_train_' + data_size_str + '.json' 
+    test_path = 'data/test/cifar10_test_' + data_size_str + '.json' 
     dir_path = os.path.dirname(train_path)
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
@@ -53,7 +57,7 @@ for idx in range(len(data_size_str_list)):
     fmnist_data_label = np.array(fmnist_data_label)
 
     fmnist_data = []
-    for i in trange(10):
+    for i in trange(TOTL_NUM_LABELS):
         idx = fmnist_data_label == i
         fmnist_data.append(fmnist_data_image[idx])
 
@@ -62,10 +66,10 @@ for idx in range(len(data_size_str_list)):
     # CREATE USER DATA SPLIT
     X = [[] for _ in range(NUM_USERS)]
     y = [[] for _ in range(NUM_USERS)]
-    idx = np.zeros(10, dtype=np.int64)
+    idx = np.zeros(TOTL_NUM_LABELS, dtype=np.int64)
     for user in trange(NUM_USERS):
         for j in range(NUM_LABELS):  # 4 labels for each users
-            l = (user * NUM_LABELS + j) % 10
+            l = (user * NUM_LABELS + j) % TOTL_NUM_LABELS
             num_samples = train_data_per_client_per_label + test_data_per_client_per_label
             if idx[l] + num_samples <= len(fmnist_data[l]):
                 X[user] += fmnist_data[l][idx[l]:idx[l] + num_samples].tolist()

@@ -39,6 +39,7 @@ class User:
 
         self.personal_model = copy.deepcopy(model)
         # self.local_model = copy.deepcopy(model)
+
         self.N_Batch = len(train_data) // batch_size
         self.data_size = len(train_data)
         data_dim = 784
@@ -55,11 +56,11 @@ class User:
         idx = 1
         num_param = len(self.local_model)
         for old_param, new_param, local_param in zip(self.model.parameters(), model.parameters(), self.local_model):
-            if (personalized and idx >= num_param - 1):
-                break
-            old_param.data = new_param.data.clone()
-            local_param.data = new_param.data.clone()
-            idx += 1
+            if (personalized and idx >= num_param - 1): 
+                break 
+            old_param.data = new_param.data.clone() 
+            local_param.data = new_param.data.clone() 
+            idx += 1 
         #self.local_weight_updated = copy.deepcopy(self.optimizer.param_groups[0]['params'])
     
     def set_parameters_pFed(self, model):
@@ -84,8 +85,12 @@ class User:
         return self.local_weight_updated
     
     def update_parameters(self, new_params):
+        # print("-----------")
         for param , new_param in zip(self.model.parameters(), new_params):
+            # print("param", param.shape)
+            # print("new_param", new_param.shape)
             param.data = new_param.data.clone()
+        # print("-----------")
 
     def get_grads(self):
         grads = []
@@ -106,7 +111,7 @@ class User:
             #@loss += self.loss(output, y)
             #print(self.id + ", Test Accuracy:", test_acc / y.shape[0] )
             #print(self.id + ", Test Loss:", loss)
-        return test_acc, y.shape[0]
+        return test_acc, y.shape[0] 
 
     def testBayes(self):
         self.model.eval()
@@ -166,6 +171,25 @@ class User:
 
         return test_acc_personal, test_acc_global, y.shape[0]
 
+    def testCifar10bayes(self):
+        self.model.eval()
+        test_acc_personal = 0
+        test_acc_global = 0
+        for x, y in self.testloaderfull:
+            x, y = x.to(self.device), y.to(self.device)
+
+            output = self.personal_model(x)
+            output = F.softmax(output, dim=1).data.argmax(axis=1)
+            test_acc_personal += (torch.sum(output == y)).item()
+
+            # global model
+            output = self.model(x)
+            output = F.softmax(output, dim=1).data.argmax(axis=1)
+            # y = test_Y.data.view(test_size)
+            test_acc_global += (torch.sum(output == y)).item()
+
+        return test_acc_personal, test_acc_global, y.shape[0]
+
     def testSparseBayes(self):
         # self.model.eval()
         test_acc = 0
@@ -215,10 +239,11 @@ class User:
         for x, y in self.trainloaderfull:
             x, y = x.to(self.device), y.to(self.device)
             output = self.model(x)
+            # train_acc += (torch.sum(output.max(1)[1] == y)).item()
             train_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
             loss += self.loss(output, y)
-            #print(self.id + ", Train Accuracy:", train_acc)
-            #print(self.id + ", Train Loss:", loss)
+            # print(self.id + ", Train Accuracy:", train_acc)
+            # print(self.id + ", Train Loss:", loss)
         return train_acc, loss , self.train_samples
 
     def train_error_and_loss_bayes(self):
@@ -249,6 +274,26 @@ class User:
             # print(self.id + ", Train Loss:", loss)
         return train_acc, loss, self.train_samples
 
+    def train_error_and_loss_cifar10(self):
+        self.model.eval()
+        correct_items = 0
+        total_loss = 0
+        total_samples = 0
+        for x, y in self.trainloader:
+            x, y = x.to(self.device), y.to(self.device)
+            # calculate the loss
+            output = self.model(x)
+            test = torch.sum(output.max(1)[1] == y)
+            loss = self.loss(output, y)
+
+            output = F.softmax(output, dim=1).data.argmax(axis=1)
+            correct_items += (torch.sum(output == y)).item()
+
+            total_loss += loss.item()
+            total_samples += len(x)
+
+        return correct_items, total_loss, total_samples
+    
     def train_error_and_loss_pFedbayes(self):
         self.model.eval()
         correct_items = 0
