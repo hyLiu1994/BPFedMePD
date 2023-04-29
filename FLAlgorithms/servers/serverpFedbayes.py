@@ -50,9 +50,9 @@ class pFedBayes(Server):
             self.send_parameters()
             # Evaluate model each interation
             if (isinstance(self.users[0].model, pBNN)):
-                self.evaluate_bayes()
+                self.evaluate_bayes(False)
             else:
-                self.evaluate()
+                self.evaluate_bayes(True)
 
             self.selected_users = self.select_users(glob_iter, self.num_users)
             for user in self.selected_users:
@@ -62,9 +62,14 @@ class pFedBayes(Server):
         self.save_results()
         return self.save_model()
 
-    def evaluate_bayes(self):
-        stats = self.testpFedbayes()
-        stats_train = self.train_error_and_loss_pFedbayes()
+    def evaluate_bayes(self, newVersion = False):
+        if (newVersion): 
+            stats = self.testBayesV2() 
+            stats_train = self.train_error_and_loss_cifar10() 
+        else:
+            stats = self.testpFedbayes() 
+            stats_train = self.train_error_and_loss_pFedbayes() 
+
         per_acc = np.sum(stats[2]) * 1.0 / np.sum(stats[1])
         glob_acc = np.sum(stats[3]) * 1.0 / np.sum(stats[1])
         train_acc = np.sum(stats_train[2]) * 1.0 / np.sum(stats_train[1])

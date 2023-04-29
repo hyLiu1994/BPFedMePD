@@ -12,6 +12,8 @@ class UserpFedBayes(User):
 
         self.output_dim = output_dim
         self.batch_size = batch_size
+        self.loss = nn.NLLLoss()
+        self.K = 5
         self.N_Batch = len(train_data) // batch_size
         self.personal_learning_rate = personal_learning_rate
         self.optimizer1 = torch.optim.Adam(self.personal_model.parameters(), lr=self.personal_learning_rate)
@@ -73,18 +75,48 @@ class UserpFedBayes(User):
                 model_loss.backward()
                 self.optimizer2.step()
         else:
+            zeta = 0.001
             self.model.train()
-            Round = 5
+            self.personal_model.train()
             for epoch in range(1, self.local_epochs + 1):  # local update
-                self.model.train()
+
                 X, y = self.get_next_train_batch()
 
-                # K = 30 # K is number of personalized steps
-                for i in range(1, Round + 1):
-                    self.optimizer1.zero_grad()
-                    output = self.model(X)
+                for i in range(self.K):
+                    output = self.personal_model(X)
+
                     loss = self.loss(output, y)
+
+                    param1 = self.model.get_parameter()
+                    param2 = self.personal_model.get_parameter()
+                    for idx in range(len(param1)):
+                        for i in range(0, len(param1[idx]), 2):
+                            mu_1, sigma_1 = param1[idx][i].clone().detach(), F.softplus(param1[idx][i+1].clone().detach())
+                            mu_2, sigma_2 = param2[idx][i], F.softplus(param2[idx][i+1])
+                            loss += 1.0 / self.local_epochs * zeta * kl_divergence(
+                                Normal(mu_1, sigma_1), Normal(mu_2, sigma_2)
+                                ).sum()
+
+                    self.optimizer1.zero_grad()
                     loss.backward()
                     self.optimizer1.step()
+
+                # # local model
+                model_output = self.model(X)
+
+                param1 = self.model.get_parameter()
+                param2 = self.personal_model.get_parameter()
+                model_loss = 0
+                for idx in range(len(param1)):
+                    for i in range(0, len(param1[idx]), 2):
+                        mu_1, sigma_1 = param1[idx][i], F.softplus(param1[idx][i+1])
+                        mu_2, sigma_2 = param2[idx][i].clone().detach(), F.softplus(param2[idx][i+1].clone().detach())
+                        model_loss += 1.0 / self.local_epochs * zeta * kl_divergence(
+                            Normal(mu_1, sigma_1), Normal(mu_2, sigma_2)
+                            ).sum()
+
+                self.optimizer2.zero_grad()
+                model_loss.backward()
+                self.optimizer2.step()
 
         return LOSS

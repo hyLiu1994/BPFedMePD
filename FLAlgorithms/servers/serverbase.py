@@ -295,7 +295,7 @@ class Server:
 
         return ids, num_samples, tot_correct_p, tot_correct_g
     
-    def testCifar10bayes(self):
+    def testBayesV2(self):
         '''tests self.latest_model on given clients
         '''
         num_samples = []
@@ -303,7 +303,7 @@ class Server:
         tot_correct_g = []
         losses = []
         for c in self.users:
-            ct_p, ct_g, ns = c.testCifar10bayes()
+            ct_p, ct_g, ns = c.testBayesV2()
             tot_correct_p.append(ct_p * 1.0)
             tot_correct_g.append(ct_g * 1.0)
             num_samples.append(ns)

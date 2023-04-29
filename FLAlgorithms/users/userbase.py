@@ -171,7 +171,7 @@ class User:
 
         return test_acc_personal, test_acc_global, y.shape[0]
 
-    def testCifar10bayes(self):
+    def testBayesV2(self):
         self.model.eval()
         test_acc_personal = 0
         test_acc_global = 0

@@ -67,9 +67,9 @@ class BPFedPD(Server):
         self.save_results()
         return self.save_model()
 
-    def evaluate_bayes(self, ispcnn = "False"):
-        if (ispcnn): 
-            stats = self.testCifar10bayes() 
+    def evaluate_bayes(self, newVersion = False):
+        if (newVersion): 
+            stats = self.testBayesV2() 
             stats_train = self.train_error_and_loss_cifar10() 
         else:
             stats = self.testpFedbayes() 
