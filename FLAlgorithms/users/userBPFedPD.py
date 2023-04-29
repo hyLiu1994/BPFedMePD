@@ -18,10 +18,6 @@ class UserBPFedPD(User):
         self.batch_size = batch_size
         self.N_Batch = len(train_data) // batch_size
 
-        # if(isinstance(self.model, pCIFARNet)):
-        #     self.loss = nn.CrossEntropyLoss()
-        # else:
-        #     self.loss = nn.NLLLoss()
         self.loss = nn.NLLLoss()
 
         self.K = 5
@@ -71,22 +67,22 @@ class UserBPFedPD(User):
                     personal_loss.backward()
                     self.optimizer1.step()
 
-                ### local model
-                # epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
-                # layer_params2 = self.model.transform_gaussian_samples(self.model.mus, self.model.rhos, epsilons)
-                # model_output = self.model.net(batch_X, layer_params2)
+                # local model
+                epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
+                layer_params2 = self.model.transform_gaussian_samples(self.model.mus, self.model.rhos, epsilons)
+                model_output = self.model.net(batch_X, layer_params2)
 
-                # model_loss = self.model.combined_loss_local(
-                #     [t.clone().detach() for t in layer_params1],
-                #     copy.deepcopy(self.personal_model.mus),
-                #     [t.clone().detach() for t in self.personal_model.sigmas],
-                #     self.model.mus, self.model.sigmas, self.local_epochs)
+                model_loss = self.model.combined_loss_local(
+                    [t.clone().detach() for t in layer_params1],
+                    copy.deepcopy(self.personal_model.mus),
+                    [t.clone().detach() for t in self.personal_model.sigmas],
+                    self.model.mus, self.model.sigmas, self.local_epochs)
 
-                # self.optimizer2.zero_grad()
-                # model_loss.backward()
-                # self.optimizer2.step()
+                self.optimizer2.zero_grad()
+                model_loss.backward()
+                self.optimizer2.step()
 
-            self.update_parameters(self.personal_model.parameters())
+            # self.update_parameters(self.personal_model.parameters())
 
         else:
             zeta = 0.001
@@ -115,6 +111,24 @@ class UserBPFedPD(User):
                     loss.backward()
                     self.optimizer1.step()
 
-            self.update_parameters(self.personal_model.parameters())
+                # # local model
+                model_output = self.model(X)
+
+                param1 = self.model.get_parameter()
+                param2 = self.personal_model.get_parameter()
+                model_loss = 0
+                for idx in range(len(param1)):
+                    for i in range(0, len(param1[idx]), 2):
+                        mu_1, sigma_1 = param1[idx][i], F.softplus(param1[idx][i+1])
+                        mu_2, sigma_2 = param2[idx][i].clone().detach(), F.softplus(param2[idx][i+1].clone().detach())
+                        model_loss += 1.0 / self.local_epochs * zeta * kl_divergence(
+                            Normal(mu_1, sigma_1), Normal(mu_2, sigma_2)
+                            ).sum()
+
+                self.optimizer2.zero_grad()
+                model_loss.backward()
+                self.optimizer2.step()
+
+            # self.update_parameters(self.personal_model.parameters())
 
         return LOSS

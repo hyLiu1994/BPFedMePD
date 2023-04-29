@@ -24,6 +24,7 @@ class UserPerAvg(User):
             self.loss = nn.NLLLoss()
 
         self.optimizer = MySGD(self.model.parameters(), lr=self.learning_rate)
+        # self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
     def set_grads(self, new_grads):
         if isinstance(new_grads, nn.Parameter):
@@ -33,9 +34,7 @@ class UserPerAvg(User):
             for idx, model_grad in enumerate(self.model.parameters()):
                 model_grad.data = new_grads[idx]
 
-    def train(self, epochs):
-        LOSS = 0
-        self.model.train()
+
     def train(self, epochs):
         LOSS = 0
         self.model.train()
@@ -72,14 +71,14 @@ class UserPerAvg(User):
 
     def train_one_step(self):
         self.model.train()
-        #step 1
+        # step 1
         X, y = self.get_next_test_batch()
         self.optimizer.zero_grad()
         output = self.model(X)
         loss = self.loss(output, y)
         loss.backward()
         self.optimizer.step()
-            #step 2
+        # step 2
         X, y = self.get_next_test_batch()
         self.optimizer.zero_grad()
         output = self.model(X)

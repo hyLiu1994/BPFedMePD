@@ -127,6 +127,7 @@ class Server:
             
     # Save loss, accurancy to h5 fiel
     def save_results(self):
+        print("store persionalized value!")
         alg = self.dataset + "_" + self.datasize + "_" + self.algorithm
         alg = alg + "_" + str(self.learning_rate) + "_" + str(self.beta) + "_" + str(self.lamda) + "_" + str(self.num_users) + "u" + "_" + str(self.batch_size) + "b" + "_" + str(self.local_epochs)
         if(self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
@@ -145,11 +146,13 @@ class Server:
         if(self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
             alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
         alg = alg + "_" + str(self.times)
-        if (len(self.rs_glob_acc_per) != 0 &  len(self.rs_train_acc_per) & len(self.rs_train_loss_per)) :
+        if (len(self.rs_glob_acc_per) != 0) :
             with h5py.File("./results/"+'{}.h5'.format(alg, self.local_epochs), 'w') as hf:
                 hf.create_dataset('rs_glob_acc', data=self.rs_glob_acc_per)
-                hf.create_dataset('rs_train_acc', data=self.rs_train_acc_per)
-                hf.create_dataset('rs_train_loss', data=self.rs_train_loss_per)
+                if (len(self.rs_train_acc_per)):
+                    hf.create_dataset('rs_train_acc', data=self.rs_train_acc_per)
+                if (len(self.rs_train_loss_per)):
+                    hf.create_dataset('rs_train_loss', data=self.rs_train_loss_per)
                 hf.close()
 
     def test(self):

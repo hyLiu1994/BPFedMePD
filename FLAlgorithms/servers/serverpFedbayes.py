@@ -69,7 +69,7 @@ class pFedBayes(Server):
         glob_acc = np.sum(stats[3]) * 1.0 / np.sum(stats[1])
         train_acc = np.sum(stats_train[2]) * 1.0 / np.sum(stats_train[1])
         train_loss = sum([x * y for (x, y) in zip(stats_train[1], stats_train[3])]) / np.sum(stats_train[1])
-        self.rs_per_acc.append(per_acc)
+        self.rs_glob_acc_per.append(per_acc)
         self.rs_glob_acc.append(glob_acc)
         self.rs_train_acc.append(train_acc)
         self.rs_train_loss.append(train_loss)

@@ -12,11 +12,11 @@ def main(args):
     for i in range(args.times):
         print("---------------Running time:", i, "------------")
         # Generate model
-        model = model_select(args.model_name, args)
+        model = model_select(args)
         server = server_select(args.algorithm, model, i, args) 
 
         server.train()
-        if (isinstance(model, pBNN)):
+        if (isinstance(model[0], pBNN)):
             server.testpFedbayes()
         else:
             server.test()

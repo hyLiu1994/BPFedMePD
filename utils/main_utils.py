@@ -11,9 +11,9 @@ def load_hypermater():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="Cifar10", choices=["Mnist", "FMnist", "Cifar10"])
     parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
-    parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
+    # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
     parser.add_argument("--batch_size", type=int, default=50)
-    parser.add_argument("--learning_rate", type=float, default=0.01, help="Local learning rate")
+    parser.add_argument("--learning_rate", type=float, default=0.001, help="Local learning rate")
     parser.add_argument("--beta", type=float, default=1.0, help="Average moving parameter for pFedMe, or Second learning rate of Per-FedAvg")
     parser.add_argument("--lamda", type=int, default=15, help="Regularization term")
     parser.add_argument("--num_glob_iters", type=int, default=800)
@@ -22,7 +22,7 @@ def load_hypermater():
     parser.add_argument("--algorithm", type=str, default="BPFedPD",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes", "BPFedPD"]) 
     parser.add_argument("--numusers", type=int, default=10, help="Number of Users per round")
     parser.add_argument("--K", type=int, default=5, help="Computation steps")
-    parser.add_argument("--personal_learning_rate", type=float, default=0.01, help="Persionalized learning rate to caculate theta aproximately using K steps")
+    parser.add_argument("--personal_learning_rate", type=float, default=0.001, help="Persionalized learning rate to caculate theta aproximately using K steps")
     parser.add_argument("--times", type=int, default=1, help="running time")
     parser.add_argument("--gpu", type=int, default=0, help="Which GPU to run the experiments, -1 mean CPU, 0,1,2 for GPU")
 
@@ -42,23 +42,24 @@ def load_hypermater():
     print("Number of local rounds       : {}".format(args.local_epochs))
     print("Dataset                      : {}".format(args.dataset))
     print("Datatype                     : {}".format(args.datasize))
-    print("Local Model                  : {}".format(args.model_name))
     print("=" * 80)
 
     return args
 
-def model_select(model, args):
-    if(model == "dnn"):
-        model = DNN(784, 100, 10).to(args.device), model
+def model_select(args):
+    if (args.dataset == "Cifar10"):
+        if (args.algorithm == 'pFedBayes' or args.algorithm == 'BPFedPD'):
+            model = pCIFARNet(10).to(args.device), "pCIFARNet"
+        else: 
+            model = CifarNet().to(args.device), "CifarNet"
 
-    if model == "pbnn":
-        model = pBNN(784, 100, 10, args.device, args.weight_scale, args.rho_offset, args.zeta).to(args.device), model
-
-    if(model == "cnn"):
-        model = CifarNet().to(args.device), model 
-
-    if model == "pcnn":
-        model = pCIFARNet(10).to(args.device), model
+    if (args.dataset == 'Mnist' or args.dataset == "FMnist"):
+        if (args.algorithm == 'pFedBayes'):
+            model = pBNN(784, 100, 10, args.device, args.weight_scale, args.rho_offset, args.zeta).to(args.device), "pbnn"
+        elif (args.algorithm == 'BPFedPD'):
+            model = pBNN_v2().to(args.device), "pbnn_v2"
+        else:
+            model = DNN(784, 100, 10).to(args.device), "dnn"
 
     return model
 

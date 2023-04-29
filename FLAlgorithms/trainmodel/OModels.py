@@ -120,11 +120,36 @@ class pBNN(nn.Module):
                                               Normal(mus_local[i], sigmas_local[i]))) for i in range(len(params))])
         return 1.0 / num_batches * (self.zeta * KL_q_w)
 
+class pBNN_v2(ModuleWrapper):
+    def __init__(self, n_classes=10, k=1., **kwargs):
+        super(pBNN_v2, self).__init__(**kwargs)
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.features = nn.Sequential(OrderedDict([
+            ('flatten', Flatten()), 
+        ])) 
+        self.classifier = nn.Sequential(OrderedDict([ 
+            ('fc1', bayes.FFGLinear(784, 100)), 
+            ('relu', nn.ReLU()), 
+            ('linear', bayes.FFGLinear(100, n_classes)), 
+            ('logsoftmax', nn.LogSoftmax(dim=1)), 
+        ])) 
+        if self.device:
+            self.to(self.device)
+        
+    def forward(self, input):
+        return self.classifier(self.features(input))
+
+    def get_dist(self):
+        modules = [self.classifier.fc1.dist(), self.classifier.linear.dist()]
+        return modules
+    
+    def get_parameter(self):
+        modules = [self.classifier.fc1.q_params(), self.classifier.linear.q_params()]
+        return modules
 
 class Flatten(nn.Module):
     def forward(self, x):
         return x.view(x.size(0), -1)
-
 
 class pCIFARNet(ModuleWrapper):
     def __init__(self, n_classes=10, k=1., **kwargs):
@@ -132,7 +157,6 @@ class pCIFARNet(ModuleWrapper):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.features = nn.Sequential(OrderedDict([
             ('conv1', bayes.BayesConv2d(3, 6, 5)), 
-            # ('conv1', bayes.BayesConv2d(1, 6, 5)), 
             ('relu1', nn.ReLU()),
             ('maxpool', nn.MaxPool2d(2, 2)), 
             ('conv2', bayes.BayesConv2d(6, 16, 5)), 
@@ -140,9 +164,6 @@ class pCIFARNet(ModuleWrapper):
             ('flatten', Flatten()), 
         ])) 
         self.classifier = nn.Sequential(OrderedDict([ 
-            # ('fc1', bayes.FFGLinear(784, 100)), 
-            # ('linear', bayes.FFGLinear(100, n_classes)), 
-            # ('fc1', bayes.FFGLinear(1024, 120)), 
             ('fc1', bayes.FFGLinear(4 * 16 * 25, 120)), 
             ('relu3', nn.ReLU()), 
             ('fc2', bayes.FFGLinear(120, 84)), 
@@ -157,12 +178,10 @@ class pCIFARNet(ModuleWrapper):
         return self.classifier(self.features(input))
 
     def get_dist(self):
-        # modules = [self.features.conv1.dist(), self.features.conv2.dist(), self.classifier.fc1.dist(), self.classifier.fc2.dist(), self.classifier.linear.dist()]
-        modules = [self.classifier.fc1.dist(), self.classifier.linear.dist()]
+        modules = [self.features.conv1.dist(), self.features.conv2.dist(), self.classifier.fc1.dist(), self.classifier.fc2.dist(), self.classifier.linear.dist()]
         return modules
     
     def get_parameter(self):
-        # modules = [self.features.conv1.dist(), self.features.conv2.dist(), self.classifier.fc1.dist(), self.classifier.fc2.dist(), self.classifier.linear.dist()]
-        modules = [self.classifier.fc1.q_params(), self.classifier.linear.q_params()]
+        modules = [self.features.conv1.q_params(), self.features.conv2.q_params(), self.classifier.fc1.q_params(), self.classifier.fc2.q_params(), self.classifier.linear.q_params()]
         return modules
     

@@ -50,7 +50,8 @@ class PerAvg(Server):
             # choose several users to send back upated model to server
             self.selected_users = self.select_users(glob_iter,self.num_users)
             for user in self.selected_users:
-                user.train(self.local_epochs) #* user.train_samples
+                user.train(self.local_epochs) # * user.train_samples
+                # user.train_one_step(self.local_epochs) # * user.train_samples
                 
             self.aggregate_parameters()
 
