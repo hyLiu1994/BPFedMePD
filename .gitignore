@@ -127,3 +127,18 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# data
+data/Cifar10/cifar-10-batches-py
+data/Cifar10/data
+data/FMnist/FashionMNIST
+data/FMnist/data
+data/Mnist/MNIST
+data/Mnist/data
+data/Synthetic
+models/Cifar10
+models/FMnist
+models/Mnist
+
+
+.vscode
