@@ -52,15 +52,15 @@ class User:
         self.phi_prior = torch.tensor(lm).to(self.device)
         self.temp = 0.5
     
-    def set_parameters(self, model, personalized = False):
-        idx = 1
+    def set_parameters(self, model, personalized = []):
         num_param = len(self.local_model)
+        idx = 0
         for old_param, new_param, local_param in zip(self.model.parameters(), model.parameters(), self.local_model):
-            if (personalized and idx >= num_param - 1): 
-                break 
-            old_param.data = new_param.data.clone() 
-            local_param.data = new_param.data.clone() 
-            idx += 1 
+            # if (len(personalized) != 0):
+                # print(old_param.data.shape, personalized[idx])
+            if (len(personalized) != 0 and personalized[idx] == 1):
+                continue
+            old_param.data, local_param.data, idx = new_param.data.clone(), new_param.data.clone(), idx + 1
         #self.local_weight_updated = copy.deepcopy(self.optimizer.param_groups[0]['params'])
     
     def set_parameters_pFed(self, model):
@@ -370,10 +370,11 @@ class User:
             # print(self.id + ", Train Loss:", loss)
         return train_acc, loss, self.train_samples
 
-    def test_persionalized_model(self):
+    def test_persionalized_model(self, hasPMB = True):
         self.model.eval()
         test_acc = 0
-        self.update_parameters(self.persionalized_model_bar)
+        if (hasPMB):
+            self.update_parameters(self.persionalized_model_bar)
         for x, y in self.testloaderfull:
             x, y = x.to(self.device), y.to(self.device)
             output = self.model(x)

@@ -17,6 +17,7 @@ class pFedBayes(Server):
                          local_epochs, optimizer, num_users, times)
 
         # Initialize data for all  users
+        self.mark_personalized_module = model[0].get_mark_personlized_module(0)
         data = read_data(dataset, datasize)
         self.personal_learning_rate = personal_learning_rate
         total_users = len(data[0])

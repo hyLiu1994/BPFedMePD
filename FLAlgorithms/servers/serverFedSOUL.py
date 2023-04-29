@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 
-from FLAlgorithms.users.userBPFedPD import UserBPFedPD
+from FLAlgorithms.users.userFedSOUL import UserFedSOUL
 from FLAlgorithms.servers.serverbase import Server
 from FLAlgorithms.trainmodel.OModels import *
 from utils.model_utils import read_data, read_user_data
@@ -9,7 +9,7 @@ import numpy as np
 
 
 # Implementation for FedAvg Server
-class BPFedPD(Server):
+class FedSOUL(Server):
     def __init__(self, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
                  local_epochs, optimizer, num_users, times, device, personal_learning_rate,
                  output_dim=10):
@@ -25,7 +25,7 @@ class BPFedPD(Server):
         print('clients initializting...')
         for i in tqdm(range(total_users), total=total_users):
             id, train, test = read_user_data(i, data, dataset)
-            user = UserBPFedPD(id, train, test, model, batch_size, learning_rate,beta,lamda, local_epochs, optimizer,
+            user = UserFedSOUL(id, train, test, model, batch_size, learning_rate,beta,lamda, local_epochs, optimizer,
                                  personal_learning_rate, device, output_dim=output_dim)
             self.users.append(user)
             self.total_train_samples += user.train_samples 

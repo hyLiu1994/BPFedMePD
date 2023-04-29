@@ -1,32 +1,29 @@
 import torch
 import os
 
-from FLAlgorithms.users.userpFedMe import UserpFedMe
+from FLAlgorithms.users.userFedPer import UserFedPer
 from FLAlgorithms.servers.serverbase import Server
 from utils.model_utils import read_data, read_user_data
 import numpy as np
  
-# Implementation for pFedMe Server
-
-class pFedMe(Server):
+class FedPer(Server):
     def __init__(self, device,  dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
                  local_epochs, optimizer, num_users, K, personal_learning_rate, times):
         super().__init__(device, dataset, datasize, algorithm, model[0], batch_size, learning_rate, beta, lamda, num_glob_iters,
                          local_epochs, optimizer, num_users, times)
 
         # Initialize data for all  users
-        self.mark_personalized_module = model[0].get_mark_personlized_module(0)
+        self.mark_personalized_module = model[0].get_mark_personlized_module(-1)
+        print("mark_personalized_module", self.mark_personalized_module)
         data = read_data(dataset, datasize)
         total_users = len(data[0])
         self.K = K
         self.personal_learning_rate = personal_learning_rate
         for i in range(total_users):
             id, train , test = read_user_data(i, data, dataset)
-            user = UserpFedMe(device, id, train, test, model, batch_size, learning_rate, beta, lamda, local_epochs, optimizer, K, personal_learning_rate)
+            user = UserFedPer(device, id, train, test, model, batch_size, learning_rate, beta, lamda, local_epochs, optimizer, K, personal_learning_rate)
             self.users.append(user)
             self.total_train_samples += user.train_samples
-        # print("Number of users / total users:",num_users, " / " ,total_users)
-        # print("Finished creating pFedMe server.")
 
     def send_grads(self):
         assert (self.users is not None and len(self.users) > 0)
@@ -44,7 +41,7 @@ class pFedMe(Server):
         for glob_iter in range(self.num_glob_iters):
             print("-------------Round number: ",glob_iter, self.num_glob_iters, " -------------")
             # send all parameter for users 
-            self.send_parameters()
+            self.send_parameters(personalized = self.mark_personalized_module)
 
             # Evaluate gloal model on user for each interation
             print("Evaluate global model")
@@ -55,19 +52,12 @@ class pFedMe(Server):
             for user in self.users:
                 user.train(self.local_epochs) #* user.train_samples
             
-            # choose several users to send back upated model to server
-            # self.personalized_evaluate()
             self.selected_users = self.select_users(glob_iter,self.num_users)
 
-            # Evaluate gloal model on user for each interation
-            #print("Evaluate persionalized model")
-            #print("")
-            self.evaluate_personalized_model()
-            #self.aggregate_parameters()
-            self.persionalized_aggregate_parameters()
+            self.evaluate_personalized_model(hasPMB=False)
+            self.aggregate_parameters()
 
 
-        #print(loss)
         self.save_results()
         self.save_model()
     

@@ -46,7 +46,7 @@ class Server:
         for idx, param in enumerate(self.model.parameters()):
             param.grad = param.grad + user_grad[idx].clone() * ratio
 
-    def send_parameters(self, personalized = False):
+    def send_parameters(self, personalized = []):
         assert (self.users is not None and len(self.users) > 0)
         for user in self.users:
             user.set_parameters(self.model, personalized)
@@ -184,13 +184,13 @@ class Server:
 
         return ids, num_samples, tot_correct, losses
 
-    def test_persionalized_model(self):
+    def test_persionalized_model(self, hasPMB=True):
         '''tests self.latest_model on given clients
         '''
         num_samples = []
         tot_correct = []
         for c in self.users:
-            ct, ns = c.test_persionalized_model()
+            ct, ns = c.test_persionalized_model(hasPMB)
             tot_correct.append(ct*1.0)
             num_samples.append(ns)
         ids = [c.id for c in self.users]
@@ -227,8 +227,8 @@ class Server:
         print("Average Global Trainning Accurancy: ", train_acc)
         print("Average Global Trainning Loss: ",train_loss)
 
-    def evaluate_personalized_model(self):
-        stats = self.test_persionalized_model()  
+    def evaluate_personalized_model(self, hasPMB=True):
+        stats = self.test_persionalized_model(hasPMB=hasPMB)  
         stats_train = self.train_error_and_loss_persionalized_model()
         glob_acc = np.sum(stats[2])*1.0/np.sum(stats[1])
         train_acc = np.sum(stats_train[2])*1.0/np.sum(stats_train[1])

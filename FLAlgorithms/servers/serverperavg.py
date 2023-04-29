@@ -14,6 +14,7 @@ class PerAvg(Server):
                          local_epochs, optimizer, num_users, times)
 
         # Initialize data for all  users
+        self.mark_personalized_module = model[0].get_mark_personlized_module(-1)
         data = read_data(dataset, datasize)
         total_users = len(data[0])
         for i in range(total_users):

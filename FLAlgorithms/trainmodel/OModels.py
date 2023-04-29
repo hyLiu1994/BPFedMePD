@@ -13,15 +13,25 @@ class DNN(nn.Module):
         super(DNN, self).__init__()
         # define network layers
         self.fc1 = nn.Linear(input_dim, mid_dim)
-        self.fc2 = nn.Linear(mid_dim, output_dim)
+        self.linear = nn.Linear(mid_dim, output_dim)
         
     def forward(self, x):
         # define forward pass
         x = torch.flatten(x, 1)
         x = F.relu(self.fc1(x))
-        x = self.fc2(x)
+        x = self.linear(x)
         x = F.log_softmax(x, dim=1)
         return x
+    
+    def get_mark_personlized_module(self, mark_personal_layer = 0):
+        if (mark_personal_layer == 0):
+            return []
+        if (abs(mark_personal_layer) >= 2):
+            return [1, 1, 1, 1]
+        if (mark_personal_layer == -1):
+            return [0, 0, 1, 1]
+        if (mark_personal_layer == 1):
+            return [1, 1, 0, 0]
 
 class CifarNet(nn.Module):
     def __init__(self):
@@ -31,7 +41,8 @@ class CifarNet(nn.Module):
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        self.linear = nn.Linear(84, 10)
+        self.mark_list = [2, 2, 2, 2, 2]
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -39,8 +50,20 @@ class CifarNet(nn.Module):
         x = x.view(-1, 16 * 5 * 5)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.linear(x)
         return F.log_softmax(x, dim=1)
+
+    def get_mark_personlized_module(self, mark_personal_layer = 0):
+        if (mark_personal_layer == 0):
+            return []
+        module_mark_list = []
+        for idx, param_num in enumerate(self.mark_list):
+            padding = 0
+            if (idx < mark_personal_layer or idx >= len(self.mark_list) + mark_personal_layer):
+                padding = 1
+            for i in range(param_num):
+                module_mark_list.append(padding)
+        return module_mark_list
 
 class pBNN(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, device=torch.device('cpu'),
@@ -60,6 +83,7 @@ class pBNN(nn.Module):
         self.rho_offset = rho_offset
         self.zeta = torch.tensor(zeta, device=self.device)
         self.sigmas = torch.tensor([1.] * len(self.layer_param_shapes), device=self.device)
+        self.mark_list = [2, 2]
 
         for shape in self.layer_param_shapes:
             mu = nn.Parameter(torch.normal(mean=torch.zeros(shape), std=self.weight_scale * torch.ones(shape)))
@@ -120,6 +144,19 @@ class pBNN(nn.Module):
                                               Normal(mus_local[i], sigmas_local[i]))) for i in range(len(params))])
         return 1.0 / num_batches * (self.zeta * KL_q_w)
 
+    def get_mark_personlized_module(self, mark_personal_layer = 0):
+        if (mark_personal_layer == 0):
+            return []
+        module_mark_list = []
+        for i in range(2):
+            for idx, param_num in enumerate(self.mark_list):
+                padding = 0
+                if (idx < mark_personal_layer or idx >= len(self.mark_list) + mark_personal_layer):
+                    padding = 1
+                for k in range(param_num):
+                    module_mark_list.append(padding)
+        return module_mark_list
+
 class pBNN_v2(ModuleWrapper):
     def __init__(self, n_classes=10, k=1., **kwargs):
         super(pBNN_v2, self).__init__(**kwargs)
@@ -133,6 +170,7 @@ class pBNN_v2(ModuleWrapper):
             ('linear', bayes.FFGLinear(100, n_classes)), 
             ('logsoftmax', nn.LogSoftmax(dim=1)), 
         ])) 
+        self.mark_list = [4, 4]
         if self.device:
             self.to(self.device)
         
@@ -146,6 +184,18 @@ class pBNN_v2(ModuleWrapper):
     def get_parameter(self):
         modules = [self.classifier.fc1.q_params(), self.classifier.linear.q_params()]
         return modules
+    
+    def get_mark_personlized_module(self, mark_personal_layer = 0):
+        if (mark_personal_layer == 0):
+            return []
+        module_mark_list = []
+        for idx, param_num in enumerate(self.mark_list):
+            padding = 0
+            if (idx < mark_personal_layer or idx >= len(self.mark_list) + mark_personal_layer):
+                padding = 1
+            for i in range(param_num):
+                module_mark_list.append(padding)
+        return module_mark_list
 
 class Flatten(nn.Module):
     def forward(self, x):
@@ -171,6 +221,7 @@ class pCIFARNet(ModuleWrapper):
             ('linear', bayes.FFGLinear(84, n_classes)), 
             ('logsoftmax', nn.LogSoftmax(dim=1)), 
         ])) 
+        self.mark_list = [4, 4, 4, 4, 4]
         if self.device:
             self.to(self.device)
         
@@ -185,3 +236,101 @@ class pCIFARNet(ModuleWrapper):
         modules = [self.features.conv1.q_params(), self.features.conv2.q_params(), self.classifier.fc1.q_params(), self.classifier.fc2.q_params(), self.classifier.linear.q_params()]
         return modules
     
+    def get_mark_personlized_module(self, mark_personal_layer = 0):
+        if (mark_personal_layer == 0):
+            return []
+        module_mark_list = []
+        for idx, param_num in enumerate(self.mark_list):
+            padding = 0
+            if (idx < mark_personal_layer or idx >= len(self.mark_list) + mark_personal_layer):
+                padding = 1
+            for i in range(param_num):
+                module_mark_list.append(padding)
+        return module_mark_list
+    
+class DNNSoul(ModuleWrapper):
+    def __init__(self, n_classes=10, k=1., **kwargs):
+        super(DNNSoul, self).__init__(**kwargs)
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.features = nn.Sequential(OrderedDict([
+            ('flatten', Flatten()), 
+        ])) 
+        self.classifier = nn.Sequential(OrderedDict([ 
+            ('fc1', nn.Linear(784, 100)), 
+            ('relu', nn.ReLU()), 
+            ('linear', bayes.FFGLinear(100, n_classes)), 
+            ('logsoftmax', nn.LogSoftmax(dim=1)), 
+        ])) 
+        self.mark_list = [2, 4]
+        if self.device:
+            self.to(self.device)
+
+    def forward(self, input):
+        return self.classifier(self.features(input))
+
+    def get_dist(self):
+        modules = [self.classifier.linear.dist()]
+        return modules
+    
+    def get_parameter(self):
+        modules = [self.classifier.linear.q_params()]
+        return modules
+    
+    def get_mark_personlized_module(self, mark_personal_layer = 0):
+        if (mark_personal_layer == 0):
+            return []
+        module_mark_list = []
+        for idx, param_num in enumerate(self.mark_list):
+            padding = 0
+            if (idx < mark_personal_layer or idx >= len(self.mark_list) + mark_personal_layer):
+                padding = 1
+            for i in range(param_num):
+                module_mark_list.append(padding)
+        return module_mark_list
+
+class CIFARNetSoul(ModuleWrapper):
+    def __init__(self, n_classes=10, k=1., **kwargs):
+        super(CIFARNetSoul, self).__init__(**kwargs)
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.features = nn.Sequential(OrderedDict([
+            ('conv1', nn.Conv2d(3, 6, 5)), 
+            ('relu1', nn.ReLU()),
+            ('maxpool', nn.MaxPool2d(2, 2)), 
+            ('conv2', nn.Conv2d(6, 16, 5)), 
+            ('relu2', nn.ReLU()), 
+            ('flatten', Flatten()), 
+        ])) 
+        self.classifier = nn.Sequential(OrderedDict([ 
+            ('fc1', nn.Linear(4 * 16 * 25, 120)), 
+            ('relu3', nn.ReLU()), 
+            ('fc2', nn.Linear(120, 84)), 
+            ('relu4', nn.ReLU()), 
+            ('linear', bayes.FFGLinear(84, n_classes)), 
+            ('logsoftmax', nn.LogSoftmax(dim=1)), 
+        ])) 
+        self.mark_list = [2, 2, 2, 2, 4]
+        if self.device:
+            self.to(self.device)
+        
+    def forward(self, input):
+        return self.classifier(self.features(input))
+
+    def get_dist(self):
+        modules = [self.classifier.linear.dist()]
+        return modules
+    
+    def get_parameter(self):
+        modules = [self.classifier.linear.q_params()]
+        return modules
+    
+    def get_mark_personlized_module(self, mark_personal_layer = 0):
+        if (mark_personal_layer == 0):
+            return []
+        module_mark_list = []
+        for idx, param_num in enumerate(self.mark_list):
+            padding = 0
+            if (idx < mark_personal_layer or idx >= len(self.mark_list) + mark_personal_layer):
+                padding = 1
+            for i in range(param_num):
+                module_mark_list.append(padding)
+        return module_mark_list

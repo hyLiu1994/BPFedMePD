@@ -5,12 +5,17 @@ from FLAlgorithms.servers.serverpFedMe import pFedMe
 from FLAlgorithms.servers.serverperavg import PerAvg
 from FLAlgorithms.servers.serverpFedbayes import pFedBayes
 from FLAlgorithms.servers.serverBPFedPD import BPFedPD
+from FLAlgorithms.servers.serverFedPer import FedPer
+from FLAlgorithms.servers.serverFedRep import FedRep
+from FLAlgorithms.servers.serverLGFedAvg import LGFedAvg
+from FLAlgorithms.servers.serverFedSOUL import FedSOUL
 
 def load_hypermater():
     # Setting hyperpameter 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, default="Cifar10", choices=["Mnist", "FMnist", "Cifar10"])
+    parser.add_argument("--dataset", type=str, default="Mnist", choices=["Mnist", "FMnist", "Cifar10"])
     parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
+    parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes", "BPFedPD", "FedPer", "LGFedAvg", "FedRep", "FedSOUL"]) 
     # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
     parser.add_argument("--batch_size", type=int, default=50)
     parser.add_argument("--learning_rate", type=float, default=0.001, help="Local learning rate")
@@ -19,7 +24,6 @@ def load_hypermater():
     parser.add_argument("--num_glob_iters", type=int, default=800)
     parser.add_argument("--local_epochs", type=int, default=20)
     parser.add_argument("--optimizer", type=str, default="SGD")
-    parser.add_argument("--algorithm", type=str, default="BPFedPD",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes", "BPFedPD"]) 
     parser.add_argument("--numusers", type=int, default=10, help="Number of Users per round")
     parser.add_argument("--K", type=int, default=5, help="Computation steps")
     parser.add_argument("--personal_learning_rate", type=float, default=0.001, help="Persionalized learning rate to caculate theta aproximately using K steps")
@@ -50,6 +54,8 @@ def model_select(args):
     if (args.dataset == "Cifar10"):
         if (args.algorithm == 'pFedBayes' or args.algorithm == 'BPFedPD'):
             model = pCIFARNet(10).to(args.device), "pCIFARNet"
+        elif (args.algorithm == 'FedSOUL'):
+            model = CIFARNetSoul(10).to(args.device), "pCIFARNet"
         else: 
             model = CifarNet().to(args.device), "CifarNet"
 
@@ -58,6 +64,8 @@ def model_select(args):
             model = pBNN(784, 100, 10, args.device, args.weight_scale, args.rho_offset, args.zeta).to(args.device), "pbnn"
         elif (args.algorithm == 'BPFedPD'):
             model = pBNN_v2().to(args.device), "pbnn_v2"
+        elif (args.algorithm == 'FedSOUL'):
+            model = DNNSoul(10).to(args.device), "pCIFARNet"
         else:
             model = DNN(784, 100, 10).to(args.device), "dnn"
 
@@ -71,6 +79,15 @@ def server_select(algorithm, model, exp_idx, args):
     if(algorithm == "pFedMe"):
         server = pFedMe(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx)
 
+    if(algorithm == "FedPer"):
+        server = FedPer(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx)
+
+    if(algorithm == "FedRep"):
+        server = FedRep(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx)
+
+    if(algorithm == "LGFedAvg"):
+        server = LGFedAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx)
+
     if(algorithm == "PerAvg"):
         server = PerAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx)
 
@@ -79,5 +96,8 @@ def server_select(algorithm, model, exp_idx, args):
     
     if (algorithm == "BPFedPD"):
         server = BPFedPD(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate)
+    
+    if (algorithm == "FedSOUL"):
+        server = FedSOUL(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate)
 
     return server 
