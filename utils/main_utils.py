@@ -32,7 +32,7 @@ def load_hypermater():
 
     parser.add_argument("--weight_scale", type=float, default=0.1)
     parser.add_argument("--rho_offset", type=int, default=-3)
-    parser.add_argument("--zeta", type=int, default=10)
+    parser.add_argument("--zeta", type=float, default=10)
     args = parser.parse_args()
 
     print("=" * 80)
@@ -61,7 +61,8 @@ def model_select(args):
 
     if (args.dataset == 'Mnist' or args.dataset == "FMnist"):
         if (args.algorithm == 'pFedBayes'):
-            model = pBNN(784, 100, 10, args.device, args.weight_scale, args.rho_offset, args.zeta).to(args.device), "pbnn"
+            # model = pBNN(784, 100, 10, args.device, args.weight_scale, args.rho_offset, args.zeta).to(args.device), "pbnn"
+            model = pBNN_v2().to(args.device), "pbnn_v2"
         elif (args.algorithm == 'BPFedPD'):
             model = pBNN_v2().to(args.device), "pbnn_v2"
         elif (args.algorithm == 'FedSOUL'):
@@ -92,10 +93,10 @@ def server_select(algorithm, model, exp_idx, args):
         server = PerAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx)
 
     if (algorithm == "pFedBayes"):
-        server = pFedBayes(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate)
+        server = pFedBayes(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.zeta)
     
     if (algorithm == "BPFedPD"):
-        server = BPFedPD(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate)
+        server = BPFedPD(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.zeta)
     
     if (algorithm == "FedSOUL"):
         server = FedSOUL(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate)

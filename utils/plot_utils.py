@@ -10,8 +10,10 @@ def simple_read_data(alg):
     print(alg)
     hf = h5py.File("./results/"+'{}.h5'.format(alg), 'r')
     rs_glob_acc = np.array(hf.get('rs_glob_acc')[:])
-    rs_train_acc = np.array(hf.get('rs_train_acc')[:])
-    rs_train_loss = np.array(hf.get('rs_train_loss')[:])
+    # rs_train_acc = np.array(hf.get('rs_train_acc')[:])
+    # rs_train_loss = np.array(hf.get('rs_train_loss')[:])
+    rs_train_acc = np.ones(rs_glob_acc.shape)
+    rs_train_loss = np.ones(rs_glob_acc.shape)
     return rs_train_acc, rs_train_loss, rs_glob_acc
 
 def get_training_data_value(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[], learning_rate=[],beta=[],algorithms_list=[], batch_size=[], dataset="", datasize="", k= [] , personal_learning_rate = []):
@@ -148,17 +150,32 @@ def get_max_value_index(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[], l
         ), "Index: ", np.argmax(glob_acc[i]), "local update:", loc_ep1[i])
 
 def get_label_name(name):
-    if name.startswith("pFedMe"):
-        if name.startswith("pFedMe_p"):
-            return "pFedMe"+ " (PM)"
-        else:
-            return "pFedMe"+ " (GM)"
-    if name.startswith("PerAvg"):
-        return "Per-FedAvg"
     if name.startswith("FedAvg"):
         return "FedAvg"
-    if name.startswith("APFL"):
-        return "APFL"
+    
+    if name.startswith("PerAvg"):
+        return "PerAvg"
+    
+    if name.startswith("pFedMe"):
+        return "pFedMe"
+    
+    if name.startswith("FedPer"):
+        return "FedPer"
+    
+    if name.startswith("LGFedAvg"):
+        return "LGFedAvg"
+    
+    if name.startswith("FedRep"):
+        return "FedRep"
+    
+    if name.startswith("FedSOUL"):
+        return "FedSOUL"
+    
+    if name.startswith("pFedBayes"):
+        return "pFedBayes"
+    
+    if name.startswith("BPFedPD"):
+        return "BPFedPD"
 
 def average_smooth(data, window_len=20, window='hanning'):
     results = []
@@ -192,39 +209,39 @@ def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, l
     # print(glob_acc, train_loss, train_acc)
 
     
-    linestyles = ['-', '--', '-.','-', '--', '-.']
-    linestyles = ['-','-','-','-','-','-','-']
-    #linestyles = ['-','-','-','-','-','-','-']
-    markers = ["o","v","s","*","x","P"]
+    linestyles = ['-', '--', '-.','-', '--', '-.', '-', '--', '-.']
+    linestyles = ['-','-','-','-','-','-','-','-','-','-']
+    markers = ["o","v","s","*","x","P", "*","x","P"]
     print(lamb)
-    colors = ['tab:blue', 'tab:green', 'r', 'darkorange', 'tab:brown', 'm']
+    colors = ['tab:blue', 'tab:green', 'r', 'darkorange', 'tab:brown', 'm', 'tab:blue', 'tab:green', 'r', 'darkorange']
     plt.figure(1,figsize=(5, 5))
-    plt.title("$\mu-$"+ "strongly convex")
+    # plt.title("$\mu-$"+ "strongly convex")
     # plt.title("Nonconvex") # for non convex case
     plt.grid(True)
-    # training loss
-    marks = []
-    for i in range(Numb_Algs):
-        label = get_label_name(algorithms_list[i])
-        label = algorithms_list[i][:10]
 
-        plt.plot(train_loss[i, 1:], linestyle=linestyles[i], label=label, linewidth = 1, color=colors[i],marker = markers[i],markevery=0.2, markersize=5)
-    plt.legend(loc='upper right')
-    plt.ylabel('Training Loss')
-    plt.xlabel('Global rounds')
-    #plt.ylim([0.05,  0.6]) # non convex-case
-    # plt.ylim([0.19,  0.4]) # convex-case
-    plt.gca().yaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}')) # 2 decimal places
-    plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_train_Com.pdf", bbox_inches="tight")
-    #plt.savefig(dataset.upper() + "Non_Convex_Mnist_train_Com.pdf", bbox_inches="tight")
-    plt.figure(2,figsize=(5, 5))
-    plt.title("$\mu-$"+ "strongly convex")
-    # plt.title("Nonconvex") # for non convex case
-    plt.grid(True)
+    # # training loss
+    # marks = []
+    # for i in range(Numb_Algs):
+    #     label = get_label_name(algorithms_list[i])
+    #     label = algorithms_list[i][:10]
+    #     plt.plot(train_loss[i, 1:], linestyle=linestyles[i], label=label, linewidth = 1, color=colors[i],marker = markers[i],markevery=0.2, markersize=5)
+    # plt.legend(loc='upper right')
+    # plt.ylabel('Training Loss')
+    # plt.xlabel('Global rounds')
+    # #plt.ylim([0.05,  0.6]) # non convex-case
+    # # plt.ylim([0.19,  0.4]) # convex-case
+    # plt.gca().yaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}')) # 2 decimal places
+    # plt.savefig(dataset.upper() + datasize.upper() + "Convex_Mnist_train_Com.pdf", bbox_inches="tight")
+    # #plt.savefig(dataset.upper() + "Non_Convex_Mnist_train_Com.pdf", bbox_inches="tight")
+    # plt.figure(2,figsize=(5, 5))
+    # plt.title("$\mu-$"+ "strongly convex")
+    # # plt.title("Nonconvex") # for non convex case
+    # plt.grid(True)
+
     # Global accurancy
     for i in range(Numb_Algs):
         label = get_label_name(algorithms_list[i])
-        label = algorithms_list[i][:10]
+        # label = algorithms_list[i][:10]
 
         plt.plot(glob_acc[i, 1:], linestyle=linestyles[i], label=label, linewidth = 1, color=colors[i],marker = markers[i],markevery=0.2, markersize=5)
     plt.legend(loc='lower right')

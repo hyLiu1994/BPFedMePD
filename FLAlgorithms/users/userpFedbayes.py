@@ -6,13 +6,14 @@ from FLAlgorithms.users.userbase import User
 
 class UserpFedBayes(User):
     def __init__(self, numeric_id, train_data, test_data, model, batch_size, learning_rate, beta, lamda,
-                 local_epochs, optimizer, personal_learning_rate, device, output_dim=10):
+                 local_epochs, optimizer, personal_learning_rate, device, zeta, output_dim=10):
         super().__init__(device, numeric_id, train_data, test_data, model[0], batch_size, learning_rate, beta, lamda,
                          local_epochs, output_dim = output_dim)
 
         self.output_dim = output_dim
         self.batch_size = batch_size
         self.loss = nn.NLLLoss()
+        self.zeta = zeta
         self.K = 5
         self.N_Batch = len(train_data) // batch_size
         self.personal_learning_rate = personal_learning_rate
@@ -75,7 +76,7 @@ class UserpFedBayes(User):
                 model_loss.backward()
                 self.optimizer2.step()
         else:
-            zeta = 0.001
+            zeta = self.zeta
             self.model.train()
             self.personal_model.train()
             for epoch in range(1, self.local_epochs + 1):  # local update
@@ -101,7 +102,7 @@ class UserpFedBayes(User):
                     loss.backward()
                     self.optimizer1.step()
 
-                # # local model
+                # local model
                 model_output = self.model(X)
 
                 param1 = self.model.get_parameter()
@@ -115,8 +116,14 @@ class UserpFedBayes(User):
                             Normal(mu_1, sigma_1), Normal(mu_2, sigma_2)
                             ).sum()
 
+                # self.optimizer1.zero_grad()
+                # model_loss.backward()
+                # self.optimizer1.step()
+
                 self.optimizer2.zero_grad()
                 model_loss.backward()
                 self.optimizer2.step()
+            
+            # self.update_parameters(self.personal_model.parameters())
 
         return LOSS

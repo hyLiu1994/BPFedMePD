@@ -8,6 +8,7 @@ from torch.nn import Parameter
 
 from .layers.misc import ModuleWrapper
 
+global_eps = 1
 class BayesConv2d(ModuleWrapper):
     def __init__(self, in_channels, out_channels, kernel_size,
                  stride=1, padding=0, dilation=1, bias=True, priors=None):
@@ -60,13 +61,13 @@ class BayesConv2d(ModuleWrapper):
             W_eps = torch.empty(self.W_mu.size()).normal_(0, 0.001).to(self.device)
             # self.W_sigma = torch.log1p(torch.exp(self.W_rho))
             self.W_sigma = F.softplus(self.W_rho)
-            weight = self.W_mu + W_eps * self.W_sigma
+            weight = self.W_mu + W_eps * self.W_sigma * global_eps
 
             if self.use_bias:
                 bias_eps = torch.empty(self.bias_mu.size()).normal_(0, 0.001).to(self.device)
                 # self.bias_sigma = torch.log1p(torch.exp(self.bias_rho))
                 self.bias_sigma = F.softplus(self.bias_rho)
-                bias = self.bias_mu + bias_eps * self.bias_sigma
+                bias = self.bias_mu + bias_eps * self.bias_sigma * global_eps
             else:
                 bias = None
         else:
@@ -78,7 +79,7 @@ class BayesConv2d(ModuleWrapper):
     def dist(self):
         # self.W_sigma = torch.log1p(torch.exp(self.W_rho))
         self.W_sigma = F.softplus(self.W_rho)
-        return dist.Normal(self.W_mu, self.W_sigma)
+        return dist.Normal(self.W_mu, self.W_sigma * global_eps)
 
     def q_params(self):
         return self.W_mu, self.W_rho
@@ -128,13 +129,13 @@ class FFGLinear(ModuleWrapper):
             W_eps = torch.empty(self.W_mu.size()).normal_(0, 0.001).to(self.device)
             # self.W_sigma = torch.log1p(torch.exp(self.W_rho))
             self.W_sigma = F.softplus(self.W_rho)
-            weight = self.W_mu + W_eps * self.W_sigma
+            weight = self.W_mu + W_eps * self.W_sigma * global_eps 
 
             if self.use_bias:
                 bias_eps = torch.empty(self.bias_mu.size()).normal_(0, 0.001).to(self.device)
                 # self.bias_sigma = torch.log1p(torch.exp(self.bias_rho))
                 self.bias_sigma = F.softplus(self.bias_rho)
-                bias = self.bias_mu + bias_eps * self.bias_sigma
+                bias = self.bias_mu + bias_eps * self.bias_sigma * global_eps
             else:
                 bias = None
         else:
@@ -149,9 +150,9 @@ class FFGLinear(ModuleWrapper):
         # self.bias_sigma = torch.log1p(torch.exp(self.bias_rho))
         self.bias_sigma = F.softplus(self.bias_rho)         
         if (self.use_bias):
-            return [dist.Normal(self.W_mu, self.W_sigma), dist.Normal(self.bias_mu, self.bias_sigma)]
+            return [dist.Normal(self.W_mu, self.W_sigma * global_eps), dist.Normal(self.bias_mu, self.bias_sigma * global_eps)]
         else:
-            return [dist.Normal(self.W_mu, self.W_sigma)]
+            return [dist.Normal(self.W_mu, self.W_sigma * global_eps)]
 
     def q_params(self):
         if (self.use_bias):

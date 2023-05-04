@@ -11,7 +11,7 @@ import numpy as np
 # Implementation for FedAvg Server
 class pFedBayes(Server):
     def __init__(self, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
-                 local_epochs, optimizer, num_users, times, device, personal_learning_rate,
+                 local_epochs, optimizer, num_users, times, device, personal_learning_rate, zeta,
                  output_dim=10):
         super().__init__(device, dataset, datasize, algorithm, model[0], batch_size, learning_rate, beta, lamda, num_glob_iters,
                          local_epochs, optimizer, num_users, times)
@@ -25,7 +25,7 @@ class pFedBayes(Server):
         for i in tqdm(range(total_users), total=total_users):
             id, train, test = read_user_data(i, data, dataset)
             user = UserpFedBayes(id, train, test, model, batch_size, learning_rate,beta,lamda, local_epochs, optimizer,
-                                 personal_learning_rate, device, output_dim=output_dim)
+                                 personal_learning_rate, device, zeta, output_dim=output_dim)
             self.users.append(user)
             self.total_train_samples += user.train_samples
             

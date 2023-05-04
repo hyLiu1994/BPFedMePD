@@ -11,12 +11,18 @@ import numpy as np
 # Implementation for FedAvg Server
 class BPFedPD(Server):
     def __init__(self, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
-                 local_epochs, optimizer, num_users, times, device, personal_learning_rate,
+                 local_epochs, optimizer, num_users, times, device, personal_learning_rate, zeta,
                  output_dim=10):
         super().__init__(device, dataset, datasize, algorithm, model[0], batch_size, learning_rate, beta, lamda, num_glob_iters,
                          local_epochs, optimizer, num_users, times)
 
         self.mark_personalized_module = model[0].get_mark_personlized_module(-1)
+        # self.mark_personalized_module[-1] = 1
+        # self.mark_personalized_module[-2] = 1
+        # self.mark_personalized_module[-3] = 0 
+        # self.mark_personalized_module[-4] = 0 
+        self.zeta = zeta
+        print("mark_personalized_module", self.mark_personalized_module)
         # Initialize data for all  users
         data = read_data(dataset, datasize)
         self.personal_learning_rate = personal_learning_rate
@@ -26,7 +32,7 @@ class BPFedPD(Server):
         for i in tqdm(range(total_users), total=total_users):
             id, train, test = read_user_data(i, data, dataset)
             user = UserBPFedPD(id, train, test, model, batch_size, learning_rate,beta,lamda, local_epochs, optimizer,
-                                 personal_learning_rate, device, output_dim=output_dim)
+                                 personal_learning_rate, device, zeta, self.mark_personalized_module, output_dim=output_dim)
             self.users.append(user)
             self.total_train_samples += user.train_samples 
 
@@ -59,10 +65,9 @@ class BPFedPD(Server):
 
             self.selected_users = self.select_users(glob_iter, self.num_users)
             for user in self.selected_users:
-                user.train()
+                user.train(self.local_epochs)
 
             self.aggregate_parameters()
-            # self.evaluate_personalized_model()
 
         self.save_results()
         return self.save_model()

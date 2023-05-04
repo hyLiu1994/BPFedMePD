@@ -38,6 +38,7 @@ class User:
         self.persionalized_model_bar = copy.deepcopy(list(self.model.parameters()))
 
         self.personal_model = copy.deepcopy(model)
+        self.local_global_model = copy.deepcopy(model)
         # self.local_model = copy.deepcopy(model)
 
         self.N_Batch = len(train_data) // batch_size
@@ -108,9 +109,9 @@ class User:
             x, y = x.to(self.device), y.to(self.device)
             output = self.model(x)
             test_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
-            #@loss += self.loss(output, y)
-            #print(self.id + ", Test Accuracy:", test_acc / y.shape[0] )
-            #print(self.id + ", Test Loss:", loss)
+            # @loss += self.loss(output, y)
+            # print(self.id + ", Test Accuracy:", test_acc / y.shape[0] )
+            # print(self.id + ", Test Loss:", loss)
         return test_acc, y.shape[0] 
 
     def testBayes(self):
