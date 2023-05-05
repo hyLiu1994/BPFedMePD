@@ -10,6 +10,9 @@ class Server:
                  num_glob_iters, local_epochs, optimizer,num_users, times):
 
         # Set up the main attributes
+        self.max_acc = 0
+        self.output_list = []
+        self.y_list = []
         self.device = device
         self.dataset = dataset
         self.datasize = datasize
@@ -154,6 +157,8 @@ class Server:
                 if (len(self.rs_train_loss_per)):
                     hf.create_dataset('rs_train_loss', data=self.rs_train_loss_per)
                 hf.close()
+        np.save("./results/"+'{}_output.npy'.format(alg, self.local_epochs), self.output_list.cpu().detach().numpy())
+        np.save("./results/"+'{}_y.npy'.format(alg, self.local_epochs), self.y_list.cpu().detach().numpy())
 
     def test(self):
         '''tests self.latest_model on given clients
@@ -161,13 +166,16 @@ class Server:
         num_samples = []
         tot_correct = []
         losses = []
+        output_list = torch.tensor([]).to(self.device)
+        y_list = torch.tensor([]).to(self.device)
         for c in self.users:
-            ct, ns = c.test()
-            tot_correct.append(ct*1.0)
+            ct, ns, output, y = c.test()
+            output_list = torch.cat((output_list, output), dim=0)
+            y_list = torch.cat((y_list, y), dim=0)
+            tot_correct.append(ct * 1.0)
             num_samples.append(ns)
         ids = [c.id for c in self.users]
-
-        return ids, num_samples, tot_correct
+        return ids, num_samples, tot_correct, output_list, y_list
 
     def train_error_and_loss(self):
         num_samples = []
@@ -189,13 +197,17 @@ class Server:
         '''
         num_samples = []
         tot_correct = []
+        output_list = torch.tensor([]).to(self.device)
+        y_list = torch.tensor([]).to(self.device)
         for c in self.users:
-            ct, ns = c.test_persionalized_model(hasPMB)
+            ct, ns, output, y = c.test_persionalized_model(hasPMB)
+            output_list = torch.cat((output_list, output), dim=0)
+            y_list = torch.cat((y_list, y), dim=0)
             tot_correct.append(ct*1.0)
             num_samples.append(ns)
         ids = [c.id for c in self.users]
 
-        return ids, num_samples, tot_correct
+        return ids, num_samples, tot_correct, output_list, y_list
 
     def train_error_and_loss_persionalized_model(self):
         num_samples = []
@@ -222,6 +234,11 @@ class Server:
         self.rs_glob_acc.append(glob_acc)
         self.rs_train_acc.append(train_acc)
         self.rs_train_loss.append(train_loss)
+        if (self.max_acc < glob_acc):
+            self.max_acc = glob_acc
+            self.output_list = stats[-2]
+            self.y_list = stats[-1]
+
         #print("stats_train[1]",stats_train[3][0])
         print("Average Global Accurancy: ", glob_acc)
         print("Average Global Trainning Accurancy: ", train_acc)
@@ -237,6 +254,10 @@ class Server:
         self.rs_glob_acc_per.append(glob_acc)
         self.rs_train_acc_per.append(train_acc)
         self.rs_train_loss_per.append(train_loss)
+        if (self.max_acc < glob_acc):
+            self.max_acc = glob_acc
+            self.output_list = stats[-2]
+            self.y_list = stats[-1]
         #print("stats_train[1]",stats_train[3][0])
         print("Average Personal Accurancy: ", glob_acc)
         print("Average Personal Trainning Accurancy: ", train_acc)
@@ -260,6 +281,10 @@ class Server:
         self.rs_glob_acc_per.append(glob_acc)
         self.rs_train_acc_per.append(train_acc)
         self.rs_train_loss_per.append(train_loss)
+        if (self.max_acc < glob_acc):
+            self.max_acc = glob_acc
+            self.output_list = stats[-2]
+            self.y_list = stats[-1]
         #print("stats_train[1]",stats_train[3][0])
         print("Average Personal Accurancy: ", glob_acc)
         print("Average Personal Trainning Accurancy: ", train_acc)
@@ -302,14 +327,18 @@ class Server:
         tot_correct_p = []
         tot_correct_g = []
         losses = []
+        output_list = torch.tensor([]).to(self.device)
+        y_list = torch.tensor([]).to(self.device)
         for c in self.users:
-            ct_p, ct_g, ns = c.testBayesV2()
+            ct_p, ct_g, ns, output, y = c.testBayesV2()
+            output_list = torch.cat((output_list, output), dim=0)
+            y_list = torch.cat((y_list, y), dim=0)
             tot_correct_p.append(ct_p * 1.0)
             tot_correct_g.append(ct_g * 1.0)
             num_samples.append(ns)
         ids = [c.id for c in self.users]
 
-        return ids, num_samples, tot_correct_p, tot_correct_g
+        return ids, num_samples, tot_correct_p, tot_correct_g, output_list, y_list
 
     def testSparseBayes(self):
         '''tests self.latest_model on given clients

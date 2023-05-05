@@ -105,14 +105,18 @@ class User:
     def test(self):
         self.model.eval()
         test_acc = 0
+        output_list = torch.tensor([]).to(self.device)
+        y_list = torch.tensor([]).to(self.device)
         for x, y in self.testloaderfull:
             x, y = x.to(self.device), y.to(self.device)
             output = self.model(x)
+            output_list = torch.cat((output_list, output), dim = 0)
+            y_list = torch.cat((y_list, y), dim = 0)
             test_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
             # @loss += self.loss(output, y)
             # print(self.id + ", Test Accuracy:", test_acc / y.shape[0] )
             # print(self.id + ", Test Loss:", loss)
-        return test_acc, y.shape[0] 
+        return test_acc, y.shape[0], output_list, y_list 
 
     def testBayes(self):
         self.model.eval()
@@ -176,10 +180,14 @@ class User:
         self.model.eval()
         test_acc_personal = 0
         test_acc_global = 0
+        output_list = torch.tensor([]).to(self.device)
+        y_list = torch.tensor([]).to(self.device)
         for x, y in self.testloaderfull:
             x, y = x.to(self.device), y.to(self.device)
 
             output = self.personal_model(x)
+            output_list = torch.cat((output_list, output), dim = 0)
+            y_list = torch.cat((y_list, y), dim = 0)
             output = F.softmax(output, dim=1).data.argmax(axis=1)
             test_acc_personal += (torch.sum(output == y)).item()
 
@@ -189,7 +197,7 @@ class User:
             # y = test_Y.data.view(test_size)
             test_acc_global += (torch.sum(output == y)).item()
 
-        return test_acc_personal, test_acc_global, y.shape[0]
+        return test_acc_personal, test_acc_global, y.shape[0], output_list, y_list 
 
     def testSparseBayes(self):
         # self.model.eval()
@@ -374,17 +382,21 @@ class User:
     def test_persionalized_model(self, hasPMB = True):
         self.model.eval()
         test_acc = 0
+        output_list = torch.tensor([]).to(self.device)
+        y_list = torch.tensor([]).to(self.device)
         if (hasPMB):
             self.update_parameters(self.persionalized_model_bar)
         for x, y in self.testloaderfull:
             x, y = x.to(self.device), y.to(self.device)
             output = self.model(x)
+            output_list = torch.cat((output_list, output), dim = 0)
+            y_list = torch.cat((y_list, y), dim = 0)
             test_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
             #@loss += self.loss(output, y)
             #print(self.id + ", Test Accuracy:", test_acc / y.shape[0] )
             #print(self.id + ", Test Loss:", loss)
         self.update_parameters(self.local_model)
-        return test_acc, y.shape[0]
+        return test_acc, y.shape[0], output_list, y_list 
 
     def train_error_and_loss_persionalized_model(self):
         self.model.eval()

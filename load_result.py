@@ -25,7 +25,6 @@ args.batch_size = 100
 # algorithm_list = ["PerAvg"]
 # args.batch_size = 50
 
-
 for args.dataset in dataset_list:
     print("%13s"%args.dataset, end="")
     print("       ", end="")

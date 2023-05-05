@@ -213,7 +213,7 @@ def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, l
     linestyles = ['-','-','-','-','-','-','-','-','-','-']
     markers = ["o","v","s","*","x","P", "*","x","P"]
     print(lamb)
-    colors = ['tab:blue', 'tab:green', 'r', 'darkorange', 'tab:brown', 'm', 'tab:blue', 'tab:green', 'r', 'darkorange']
+    colors = ['tab:blue', 'tab:green', 'r', 'darkorange', 'tab:brown', 'm', 'tab:blue', 'c', 'k']
     plt.figure(1,figsize=(5, 5))
     # plt.title("$\mu-$"+ "strongly convex")
     # plt.title("Nonconvex") # for non convex case
@@ -244,7 +244,7 @@ def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, l
         # label = algorithms_list[i][:10]
 
         plt.plot(glob_acc[i, 1:], linestyle=linestyles[i], label=label, linewidth = 1, color=colors[i],marker = markers[i],markevery=0.2, markersize=5)
-    plt.legend(loc='lower right')
+    plt.legend(loc='lower right',fontsize=8)
     plt.ylabel('Test Accuracy')
     plt.xlabel('Global rounds')
     #plt.ylim([0.84,  0.98]) # non convex-case

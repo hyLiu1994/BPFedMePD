@@ -83,6 +83,10 @@ class FedSOUL(Server):
         self.rs_glob_acc.append(glob_acc)
         self.rs_train_acc.append(train_acc)
         self.rs_train_loss.append(train_loss)
+        if (self.max_acc < per_acc):
+            self.max_acc = per_acc
+            self.output_list = stats[-2]
+            self.y_list = stats[-1]
 
         print("Average personal Accurancy: ", per_acc)
         print("Average Global Accurancy: ", glob_acc)
