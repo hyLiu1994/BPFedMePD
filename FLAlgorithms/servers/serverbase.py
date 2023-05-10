@@ -157,6 +157,8 @@ class Server:
                 if (len(self.rs_train_loss_per)):
                     hf.create_dataset('rs_train_loss', data=self.rs_train_loss_per)
                 hf.close()
+        self.output_list = torch.tensor(self.output_list)
+        self.y_list = torch.tensor(self.y_list)
         np.save("./results/"+'{}_output.npy'.format(alg, self.local_epochs), self.output_list.cpu().detach().numpy())
         np.save("./results/"+'{}_y.npy'.format(alg, self.local_epochs), self.y_list.cpu().detach().numpy())
 

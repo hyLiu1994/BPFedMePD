@@ -12,6 +12,7 @@ from utils.main_utils import load_hypermater
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
+from reliability_diagrams.reliability_diagrams import reliability_diagram
 
 def get_file_path(args, loadP = False, run_idx = 0):
     alg = args.dataset + "_" + args.datasize + "_" + args.algorithm
@@ -43,7 +44,7 @@ def plot_calibration_error(probs, targets, path, color='darkblue'):
     confidences = probs.max(-1).values.detach().numpy()
     accuracies = probs.argmax(-1).eq(targets).numpy()
 
-    n_bins = 20
+    n_bins = 10
     bin_boundaries = np.linspace(0, 1, n_bins + 1)
     bin_lowers = bin_boundaries[:-1]
     bin_uppers = bin_boundaries[1:]
@@ -58,8 +59,10 @@ def plot_calibration_error(probs, targets, path, color='darkblue'):
     plot_acc = []
 
     for bin_lower, bin_upper in zip(bin_lowers, bin_uppers):
+        # print(bin_lower, bin_upper)
         in_bin = (confidences > bin_lower) * (confidences <= bin_upper)
         prop_in_bin = in_bin.astype(np.float32).mean()
+        # print("prop_in_bin:", prop_in_bin, in_bin.sum())
 
         if prop_in_bin > 0.0:
             accuracy_in_bin = accuracies[in_bin].astype(np.float32).mean()
@@ -119,19 +122,21 @@ def change_avg(args_pre):
         args.batch_size=100 
     if (args.algorithm == 'BPFedPD'):
         args.batch_size=100 
+    if (args.algorithm == 'FedSOUL'):
+        args.beta = 1.0
     return args
 
 args = load_hypermater()
 
-dataset_list = ["Mnist", "FMnist", "Cifar10"]
-datasize_list = ["small", "large"]
-dataset_list = ["Mnist"]
+# dataset_list = ["Mnist", "FMnist", "Cifar10"]
+# datasize_list = ["small", "large"]
+
+dataset_list = ["Cifar10"]
 datasize_list = ["small"]
 
-algorithm_list = ["BPFedPD", "pFedBayes"]
-args.batch_size = 100
-algorithm_list = ["FedAvg", "PerAvg", "pFedMe", "FedPer", "LGFedAvg", "FedRep"]
-args.batch_size = 50
+# algorithm_list = ["BPFedPD", "pFedBayes"]
+algorithm_list = ["FedAvg", "PerAvg", "pFedMe", "FedPer", "LGFedAvg", "FedRep", "FedSOUL", "pFedBayes", "BPFedPD"]
+# algorithm_list = ["BPFedPD"]
 
 for args.algorithm in algorithm_list:
     for args.dataset in dataset_list:
@@ -141,7 +146,10 @@ for args.algorithm in algorithm_list:
             label_list = np.load(file_path[:-3] + "_y.npy")
             output_list = np.load(file_path[:-3] + "_output.npy")
             plot_calibration_error(output_list, label_list, file_path[:-2] + "png")
-
-
-
-
+            # compute_calibration(true_labels, pred_labels, confidences, num_bins=10)
+            if (output_list.min() < 0 or output_list.max() > 1):
+                output_list = F.softmax(torch.tensor(output_list), dim=-1).numpy()
+            accuracies = torch.tensor(output_list).argmax(-1).numpy()
+            output_list = torch.tensor(output_list).max(-1)[0].numpy()
+            # reliability_diagram(label_list, accuracies, output_list , file_path[:-2] + "png")
+            reliability_diagram(label_list, accuracies, output_list , file_path[:-2] + "pdf")
