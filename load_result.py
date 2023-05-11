@@ -48,19 +48,24 @@ def print_head(args):
 
 args = load_hypermater()
 
-# dataset_list = ["Mnist", "FMnist", "Cifar10"]
-# datasize_list = ["small", "large"]
+# dataset_list: "Mnist", "FMnist", "Cifar10"
+# datasize_list: "small", "large"
 dataset_list = ["Mnist", "FMnist", "Cifar10"]
 datasize_list = ["small", "large"]
-
+# algorithm list: "FedPer", "LGFedAvg", "FedRep", "FedSOUL", "BPFedPD"
 algorithm_list = ["FedPer", "LGFedAvg", "FedRep", "FedSOUL", "BPFedPD"]
+# output_style: 0,1
+output_style = 1
 
 print_head(args)
 for args.algorithm in algorithm_list:
     for args.add_new_client in [0, 1, 2]:
-        # print("%10s"%args.algorithm, args.add_new_client, end=" ")
-        print("\"%10s\""%(args.algorithm + " " + str(args.add_new_client)), end=" ")
-        print(":[", end="")
+        if (output_style == 1):
+            print("\"%10s\""%(args.algorithm + " " + str(args.add_new_client)), end=" ")
+            print(":[", end="")
+        else:
+            print("%10s"%args.algorithm, args.add_new_client, end=" ")
+
         for args.dataset in dataset_list:
             for args.datasize in datasize_list:
                 if (args.add_new_client == 2):
@@ -71,18 +76,25 @@ for args.algorithm in algorithm_list:
                 file_path = get_file_path(args_new, loadP=True)
                 with h5py.File(file_path , 'r') as f: 
                     # print(file_path)
-                    # print(len(f['rs_glob_acc']), len(f['rs_glob_acc'][:800] ), len(f['rs_glob_acc'][-100:] ))
                     if (args.add_new_client == 1):
-                        # print("", "%.2f"%(max(f['rs_glob_acc'][:800] )*100), "&", end="") 
-                        print("", "%.2f"%(max(f['rs_glob_acc'][:800] )*100), ",", end="") 
+                        if (output_style == 1):
+                            print("", "%.2f"%(max(f['rs_glob_acc'][:800] )*100), ",", end="") 
+                        else:
+                            print("", "%.2f"%(max(f['rs_glob_acc'][:800] )*100), "&", end="") 
                         # print(" ", "%.2f"%(max(f['rs_glob_acc'][:] )*100), "|", "%3d"%np.argmax(f['rs_glob_acc'][:]) , "&", end=" ") 
                         # print(f['rs_glob_acc'][:]) 
                     elif (args.add_new_client == 2):
-                        # print("", "%.2f"%(max(f['rs_glob_acc'][-100:] )*100), "&", end="") 
-                        print("", "%.2f"%(max(f['rs_glob_acc'][-100:] )*100), ",", end="") 
+                        if (output_style == 1):
+                            print("", "%.2f"%(max(f['rs_glob_acc'][-100:] )*100), ",", end="") 
+                        else:
+                            print("", "%.2f"%(max(f['rs_glob_acc'][-100:] )*100), "&", end="") 
                     else:
-                        # print("", "%.2f"%(max(f['rs_glob_acc'][:] )*100), "&", end="") 
-                        print("", "%.2f"%(max(f['rs_glob_acc'][:] )*100), ",", end="") 
-        # print()
-        print("],")
+                        if (output_style == 1):
+                            print("", "%.2f"%(max(f['rs_glob_acc'][:] )*100), ",", end="") 
+                        else:
+                            print("", "%.2f"%(max(f['rs_glob_acc'][:] )*100), "&", end="") 
+        if (output_style == 1):
+            print("],")
+        else:
+            print()
 print()
