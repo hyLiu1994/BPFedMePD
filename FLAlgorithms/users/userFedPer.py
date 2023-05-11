@@ -19,6 +19,7 @@ class UserFedPer(User):
         self.K = K
         self.personal_learning_rate = personal_learning_rate
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        self.optimizer_p = torch.optim.Adam(self.model.linear.parameters(), lr=self.learning_rate)
 
     def set_grads(self, new_grads):
         if isinstance(new_grads, nn.Parameter):
@@ -28,18 +29,23 @@ class UserFedPer(User):
             for idx, model_grad in enumerate(self.model.parameters()):
                 model_grad.data = new_grads[idx]
 
-    def train(self, epochs):
+    def train(self, epochs, only_train_personal=False):
         LOSS = 0
 
         self.model.train()
         for epoch in range(1, self.local_epochs + 1):  # local update 
             self.model.train()
             X, y = self.get_next_train_batch()
-            self.optimizer.zero_grad()
             output = self.model(X)
             loss = self.loss(output, y)
-            loss.backward()
-            self.optimizer.step()
+            if (only_train_personal):
+                self.optimizer_p.zero_grad()
+                loss.backward()
+                self.optimizer_p.step()
+            else:
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
             self.clone_model_paramenter(self.model.parameters(), self.local_model)
 
         return LOSS

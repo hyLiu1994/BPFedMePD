@@ -10,9 +10,9 @@ import numpy as np
 
 class FedAvg(Server):
     def __init__(self, device, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
-                 local_epochs, optimizer, num_users, times):
+                 local_epochs, optimizer, num_users, times, only_one_local = False):
         super().__init__(device, dataset, datasize, algorithm, model[0], batch_size, learning_rate, beta, lamda, num_glob_iters,
-                         local_epochs, optimizer, num_users, times)
+                         local_epochs, optimizer, num_users, times, only_one_local)
 
         # Initialize data for all  users
         self.mark_personalized_module = model[0].get_mark_personlized_module(0)
@@ -27,7 +27,7 @@ class FedAvg(Server):
         print("Number of users / total users:",num_users, " / " ,total_users)
         print("Finished creating FedAvg server.")
 
-    def send_grads(self):
+    def send_grads(self, AddNewClient = False):
         assert (self.users is not None and len(self.users) > 0)
         grads = []
         for param in self.model.parameters():

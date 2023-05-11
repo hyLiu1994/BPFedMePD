@@ -23,6 +23,7 @@ class UserFedSOUL(User):
         self.K = 5
         self.personal_learning_rate = personal_learning_rate
         self.optimizer1 = torch.optim.Adam(self.personal_model.parameters(), lr=self.personal_learning_rate)
+        self.optimizer1_p = torch.optim.Adam(self.personal_model.classifier.linear.parameters(), lr=self.personal_learning_rate)
         self.optimizer2 = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
     def set_grads(self, new_grads):
@@ -34,7 +35,7 @@ class UserFedSOUL(User):
                 model_grad.data = new_grads[idx]
 
     
-    def train(self):
+    def train(self, only_train_personal=False):
         LOSS = 0
         zeta = 0.001
         self.model.train()
@@ -57,28 +58,15 @@ class UserFedSOUL(User):
                         loss += 1.0 / self.local_epochs * zeta * kl_divergence(
                             Normal(mu_1, sigma_1), Normal(mu_2, sigma_2)
                             ).sum()
+                if (only_train_personal):
+                    self.optimizer1_p.zero_grad()
+                    loss.backward()
+                    self.optimizer1_p.step()
+                else:
+                    self.optimizer1.zero_grad()
+                    loss.backward()
+                    self.optimizer1.step()
 
-                self.optimizer1.zero_grad()
-                loss.backward()
-                self.optimizer1.step()
-
-            # # # local model
-            # model_output = self.model(X)
-
-            # param1 = self.model.get_parameter()
-            # param2 = self.personal_model.get_parameter()
-            # model_loss = 0
-            # for idx in range(len(param1)):
-            #     for i in range(0, len(param1[idx]), 2):
-            #         mu_1, sigma_1 = param1[idx][i], F.softplus(param1[idx][i+1])
-            #         mu_2, sigma_2 = param2[idx][i].clone().detach(), F.softplus(param2[idx][i+1].clone().detach())
-            #         model_loss += 1.0 / self.local_epochs * zeta * kl_divergence(
-            #             Normal(mu_1, sigma_1), Normal(mu_2, sigma_2)
-            #             ).sum()
-
-            # self.optimizer2.zero_grad()
-            # model_loss.backward()
-            # self.optimizer2.step()
             self.update_parameters(self.personal_model.parameters())
 
         return LOSS

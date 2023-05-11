@@ -29,7 +29,7 @@ class UserFedRep(User):
             for idx, model_grad in enumerate(self.model.parameters()):
                 model_grad.data = new_grads[idx]
 
-    def train(self, epochs):
+    def train(self, epochs, only_train_personal=False):
         LOSS = 0
 
         self.model.train()
@@ -37,7 +37,7 @@ class UserFedRep(User):
             self.model.train()
             X, y = self.get_next_train_batch()
             for idx in range(self.K):
-                if (idx % 5 == 0):
+                if (idx % 5 == 0 and only_train_personal==False):
                     self.optimizer_g.zero_grad()
                     output = self.model(X)
                     loss = self.loss(output, y)

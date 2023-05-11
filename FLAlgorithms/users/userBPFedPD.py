@@ -24,7 +24,9 @@ class UserBPFedPD(User):
 
         self.K = 5
         self.personal_learning_rate = personal_learning_rate
+        self.optimizer1_p = torch.optim.Adam(self.personal_model.classifier.linear.parameters(), lr=self.personal_learning_rate)
         self.optimizer1 = torch.optim.Adam(self.personal_model.parameters(), lr=self.personal_learning_rate)
+        self.optimizer2_p = torch.optim.Adam(self.model.classifier.linear.parameters(), lr=self.learning_rate)
         self.optimizer2 = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
     def set_grads(self, new_grads):
@@ -36,7 +38,7 @@ class UserBPFedPD(User):
                 model_grad.data = new_grads[idx]
 
     
-    def train(self, epoch):
+    def train(self, epoch, only_train_personal=False):
         LOSS = 0
         if (isinstance(self.model, pBNN)):
             N_Samples = 1
@@ -64,7 +66,7 @@ class UserBPFedPD(User):
                         self.personal_model.mus, self.personal_model.sigmas,
                         copy.deepcopy(self.model.mus),
                         [t.clone().detach() for t in self.model.sigmas], self.local_epochs)
-
+                    
                     self.optimizer1.zero_grad()
                     personal_loss.backward()
                     self.optimizer1.step()
@@ -128,10 +130,14 @@ class UserBPFedPD(User):
                     #         loss += 1.0 / self.local_epochs * zeta * kl_divergence(
                     #             Normal(mu_1, sigma_1), Normal(mu_2, sigma_2)
                     #             ).sum()
-
-                    self.optimizer1.zero_grad()
-                    loss.backward()
-                    self.optimizer1.step()
+                    if (only_train_personal):
+                        self.optimizer1_p.zero_grad()
+                        loss.backward()
+                        self.optimizer1_p.step()
+                    else:
+                        self.optimizer1.zero_grad()
+                        loss.backward()
+                        self.optimizer1.step()
 
                 # local model
                 model_output = self.model(X)
@@ -158,10 +164,14 @@ class UserBPFedPD(User):
                 #         model_loss += 1.0 / self.local_epochs * zeta * kl_divergence(
                 #             Normal(mu_1, sigma_1), Normal(mu_2, sigma_2)
                 #             ).sum()
-
-                self.optimizer2.zero_grad()
-                model_loss.backward()
-                self.optimizer2.step()
+                if (only_train_personal):
+                    self.optimizer2_p.zero_grad()
+                    model_loss.backward()
+                    self.optimizer2_p.step()
+                else:
+                    self.optimizer2.zero_grad()
+                    model_loss.backward()
+                    self.optimizer2.step()
 
                 # self.optimizer1.zero_grad()
                 # model_loss.backward()

@@ -11,10 +11,10 @@ import numpy as np
 # Implementation for FedAvg Server
 class pFedBayes(Server):
     def __init__(self, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
-                 local_epochs, optimizer, num_users, times, device, personal_learning_rate, zeta,
+                 local_epochs, optimizer, num_users, times, device, personal_learning_rate, zeta, only_one_local = False,
                  output_dim=10):
         super().__init__(device, dataset, datasize, algorithm, model[0], batch_size, learning_rate, beta, lamda, num_glob_iters,
-                         local_epochs, optimizer, num_users, times)
+                         local_epochs, optimizer, num_users, times, only_one_local)
 
         # Initialize data for all  users
         self.mark_personalized_module = model[0].get_mark_personlized_module(0)
@@ -43,7 +43,7 @@ class pFedBayes(Server):
         for user in self.users:
             user.set_grads(grads)
 
-    def train(self):
+    def train(self, AddNewClient = False):
         loss = []
         acc = []
         for glob_iter in range(self.num_glob_iters):

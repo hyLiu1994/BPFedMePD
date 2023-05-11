@@ -11,26 +11,31 @@ import numpy as np
 # Implementation for FedAvg Server
 class FedSOUL(Server):
     def __init__(self, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
-                 local_epochs, optimizer, num_users, times, device, personal_learning_rate,
+                 local_epochs, optimizer, num_users, times, device, personal_learning_rate, only_one_local = False,
                  output_dim=10):
         super().__init__(device, dataset, datasize, algorithm, model[0], batch_size, learning_rate, beta, lamda, num_glob_iters,
-                         local_epochs, optimizer, num_users, times)
+                         local_epochs, optimizer, num_users, times, only_one_local)
 
         self.mark_personalized_module = model[0].get_mark_personlized_module(-1)
         # Initialize data for all  users
         data = read_data(dataset, datasize)
+
+        if (only_one_local):
+            self.total_users = 1
+        else:
+            self.total_users = len(data[0])
+
         self.personal_learning_rate = personal_learning_rate
-        total_users = len(data[0])
 
         print('clients initializting...')
-        for i in tqdm(range(total_users), total=total_users):
+        for i in tqdm(range(self.total_users), total=self.total_users):
             id, train, test = read_user_data(i, data, dataset)
             user = UserFedSOUL(id, train, test, model, batch_size, learning_rate,beta,lamda, local_epochs, optimizer,
                                  personal_learning_rate, device, output_dim=output_dim)
             self.users.append(user)
             self.total_train_samples += user.train_samples 
 
-        print("Number of users / total users:", num_users, " / " ,total_users)
+        print("Number of users / total users:", num_users, " / " ,self.total_users)
         print("Finished creating FedAvg server.")
 
     def send_grads(self):
@@ -44,7 +49,10 @@ class FedSOUL(Server):
         for user in self.users:
             user.set_grads(grads)
 
-    def train(self):
+    def train(self, AddNewClient = False):
+        if (AddNewClient):
+            self.users_copy = self.users
+            self.users = self.users[1:]
         loss = []
         acc = []
         for glob_iter in range(self.num_glob_iters):
@@ -63,6 +71,28 @@ class FedSOUL(Server):
 
             self.aggregate_parameters()
             # self.evaluate_personalized_model()
+
+        if (AddNewClient):
+            loss = []
+            self.users = self.users_copy[0:1]
+            self.mark_personalized_module[-1] = self.mark_personalized_module[-2] = 1
+            self.mark_personalized_module[-3] = self.mark_personalized_module[-4] = 1
+            for glob_iter in range(AddNewClient):
+                print("-------------Add New Client Round number: ",glob_iter, AddNewClient, " -------------")
+                self.send_parameters(personalized = self.mark_personalized_module)
+
+                # Evaluate model each interation
+                if (isinstance(self.users[0].model, pBNN)):
+                    self.evaluate_bayes(False)
+                else:
+                    self.evaluate_bayes(True)
+
+                self.selected_users = self.select_users(glob_iter, self.num_users)
+                for user in self.selected_users:
+                    user.train(only_train_personal=True)
+
+                self.aggregate_parameters()
+
 
         self.save_results()
         return self.save_model()

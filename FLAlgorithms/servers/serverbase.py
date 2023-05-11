@@ -7,11 +7,12 @@ import copy
 
 class Server:
     def __init__(self, device, dataset, datasize, algorithm, model, batch_size, learning_rate ,beta, lamda,
-                 num_glob_iters, local_epochs, optimizer,num_users, times):
+                 num_glob_iters, local_epochs, optimizer,num_users, times, only_one_local):
 
         # Set up the main attributes
         self.max_acc = 0
         self.output_list = []
+        self.only_one_local = only_one_local
         self.y_list = []
         self.device = device
         self.dataset = dataset
@@ -136,6 +137,8 @@ class Server:
         if(self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
             alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
         alg = alg + "_" + str(self.times)
+        if (self.only_one_local):
+            alg = alg + "_only_one_local"
         if (len(self.rs_glob_acc) != 0 &  len(self.rs_train_acc) & len(self.rs_train_loss)) :
             with h5py.File("./results/"+'{}.h5'.format(alg, self.local_epochs), 'w') as hf:
                 hf.create_dataset('rs_glob_acc', data=self.rs_glob_acc)
@@ -149,6 +152,8 @@ class Server:
         if(self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
             alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
         alg = alg + "_" + str(self.times)
+        if (self.only_one_local):
+            alg = alg + "_only_one_local"
         if (len(self.rs_glob_acc_per) != 0) :
             with h5py.File("./results/"+'{}.h5'.format(alg, self.local_epochs), 'w') as hf:
                 hf.create_dataset('rs_glob_acc', data=self.rs_glob_acc_per)
