@@ -18,6 +18,8 @@ def load_hypermater():
     parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes", "BPFedPD", "FedPer", "LGFedAvg", "FedRep", "FedSOUL"]) 
     # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
     parser.add_argument("--batch_size", type=int, default=50)
+    parser.add_argument("--add_new_client", type=int, default=0)
+    parser.add_argument("--only_one_local", type=int, default=0)
     parser.add_argument("--learning_rate", type=float, default=0.001, help="Local learning rate")
     parser.add_argument("--beta", type=float, default=1.0, help="Average moving parameter for pFedMe, or Second learning rate of Per-FedAvg")
     parser.add_argument("--lamda", type=int, default=15, help="Regularization term")
@@ -75,30 +77,30 @@ def model_select(args):
 def server_select(algorithm, model, exp_idx, args):
     # select algorithm
     if(algorithm == "FedAvg"):
-        server = FedAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx)
+        server = FedAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.only_one_local)
     
     if(algorithm == "pFedMe"):
-        server = pFedMe(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx)
+        server = pFedMe(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx, args.only_one_local)
 
     if(algorithm == "FedPer"):
-        server = FedPer(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx)
+        server = FedPer(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx, args.only_one_local)
 
     if(algorithm == "FedRep"):
-        server = FedRep(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx)
+        server = FedRep(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx, args.only_one_local)
 
     if(algorithm == "LGFedAvg"):
-        server = LGFedAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx)
+        server = LGFedAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx, args.only_one_local)
 
     if(algorithm == "PerAvg"):
-        server = PerAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx)
+        server = PerAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.only_one_local)
 
     if (algorithm == "pFedBayes"):
-        server = pFedBayes(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.zeta)
+        server = pFedBayes(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.zeta, args.only_one_local)
     
     if (algorithm == "BPFedPD"):
-        server = BPFedPD(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.zeta)
+        server = BPFedPD(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.zeta, args.only_one_local)
     
     if (algorithm == "FedSOUL"):
-        server = FedSOUL(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate)
+        server = FedSOUL(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.only_one_local)
 
     return server 

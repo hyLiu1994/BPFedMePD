@@ -15,20 +15,20 @@ def main(args):
         model = model_select(args)
         server = server_select(args.algorithm, model, i, args) 
 
-        server.train()
+        server.train(args.add_new_client)
         if (isinstance(model[0], pBNN)):
             server.testpFedbayes()
         else:
             server.test()
 
     # Average data 
-    if(args.algorithm == "PerAvg"):
-        args.algorithm == "PerAvg_p"
+    # if(args.algorithm == "PerAvg"):
+    #     args.algorithm == "PerAvg_p"
 
-    if(args.algorithm == "pFedMe"):
-        average_data(num_users=args.numusers, loc_ep1=args.local_epochs, Numb_Glob_Iters=args.num_glob_iters, lamb=args.lamda,learning_rate=args.learning_rate, beta = args.beta, algorithms="pFedMe_p", batch_size=args.batch_size, dataset=args.dataset, datasize=args.datasize, k = args.K, personal_learning_rate = args.personal_learning_rate,times = args.times)
+    # if(args.algorithm == "pFedMe"):
+    #     average_data(num_users=args.numusers, loc_ep1=args.local_epochs, Numb_Glob_Iters=args.num_glob_iters, lamb=args.lamda,learning_rate=args.learning_rate, beta = args.beta, algorithms="pFedMe_p", batch_size=args.batch_size, dataset=args.dataset, datasize=args.datasize, k = args.K, personal_learning_rate = args.personal_learning_rate,times = args.times)
 
-    average_data(num_users=args.numusers, loc_ep1=args.local_epochs, Numb_Glob_Iters=args.num_glob_iters, lamb=args.lamda,learning_rate=args.learning_rate, beta = args.beta, algorithms=args.algorithm, batch_size=args.batch_size, dataset=args.dataset, datasize=args.datasize, k = args.K, personal_learning_rate = args.personal_learning_rate,times = args.times)
+    # average_data(num_users=args.numusers, loc_ep1=args.local_epochs, Numb_Glob_Iters=args.num_glob_iters, lamb=args.lamda,learning_rate=args.learning_rate, beta = args.beta, algorithms=args.algorithm, batch_size=args.batch_size, dataset=args.dataset, datasize=args.datasize, k = args.K, personal_learning_rate = args.personal_learning_rate,times = args.times)
 
 if __name__ == "__main__":
     args = load_hypermater()
