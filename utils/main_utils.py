@@ -9,6 +9,7 @@ from FLAlgorithms.servers.serverFedPer import FedPer
 from FLAlgorithms.servers.serverFedRep import FedRep
 from FLAlgorithms.servers.serverLGFedAvg import LGFedAvg
 from FLAlgorithms.servers.serverFedSOUL import FedSOUL
+from FLAlgorithms.servers.serverFedPAC import FedPAC
 
 def load_hypermater():
     # Setting hyperpameter 
@@ -56,7 +57,7 @@ def model_select(args):
     if (args.dataset == "Cifar10"):
         if (args.algorithm == 'pFedBayes' or args.algorithm == 'BPFedPD'):
             model = pCIFARNet(10).to(args.device), "pCIFARNet"
-        elif (args.algorithm == 'FedSOUL'):
+        elif (args.algorithm == 'FedSOUL' or args.algorithm == 'FedPAC'):
             model = CIFARNetSoul(10).to(args.device), "pCIFARNet"
         else: 
             model = CifarNet().to(args.device), "CifarNet"
@@ -67,7 +68,7 @@ def model_select(args):
             model = pBNN_v2().to(args.device), "pbnn_v2"
         elif (args.algorithm == 'BPFedPD'):
             model = pBNN_v2().to(args.device), "pbnn_v2"
-        elif (args.algorithm == 'FedSOUL'):
+        elif (args.algorithm == 'FedSOUL' or args.algorithm == 'FedPAC'):
             model = DNNSoul(10).to(args.device), "pCIFARNet"
         else:
             model = DNN(784, 100, 10).to(args.device), "dnn"
@@ -102,5 +103,8 @@ def server_select(algorithm, model, exp_idx, args):
     
     if (algorithm == "FedSOUL"):
         server = FedSOUL(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.only_one_local)
+
+    if (algorithm == "FedPAC"):
+        server = FedPAC(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.only_one_local)
 
     return server 
