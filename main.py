@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from utils.main_utils import server_select, model_select, load_hypermater
 from FLAlgorithms.trainmodel.OModels import *
+from FLAlgorithms.trainmodel.FedSIModel import *
 from utils.plot_utils import *
 import torch
 torch.manual_seed(0)
