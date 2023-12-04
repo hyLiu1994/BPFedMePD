@@ -137,6 +137,8 @@ class Server:
         if(self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
             alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
         alg = alg + "_" + str(self.times)
+        if (self.algorithm == "FedSI"):
+            alg = alg + "_" + str(self.subnetwork_rate)
         if (self.only_one_local):
             alg = alg + "_only_one_local"
         if (len(self.rs_glob_acc) != 0 &  len(self.rs_train_acc) & len(self.rs_train_loss)) :
@@ -152,6 +154,8 @@ class Server:
         if(self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
             alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
         alg = alg + "_" + str(self.times)
+        if (self.algorithm == "FedSI"):
+            alg = alg + "_" + str(self.subnetwork_rate)
         if (self.only_one_local):
             alg = alg + "_only_one_local"
         if (len(self.rs_glob_acc_per) != 0) :
@@ -199,7 +203,7 @@ class Server:
 
         return ids, num_samples, tot_correct, losses
 
-    def test_persionalized_model(self, hasPMB=True):
+    def test_persionalized_model(self, hasPMB=False):
         '''tests self.latest_model on given clients
         '''
         num_samples = []

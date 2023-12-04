@@ -379,7 +379,7 @@ class User:
             # print(self.id + ", Train Loss:", loss)
         return train_acc, loss, self.train_samples
 
-    def test_persionalized_model(self, hasPMB = True):
+    def test_persionalized_model(self, hasPMB = False):
         self.model.eval()
         test_acc = 0
         output_list = torch.tensor([]).to(self.device)

@@ -9,7 +9,6 @@ from FLAlgorithms.users.userbase import User
 import copy
 
 # Implementation for pFeMe clients
-
 class UserpFedMe(User):
     def __init__(self, device, numeric_id, train_data, test_data, model, batch_size, learning_rate,beta,lamda,
                  local_epochs, optimizer, K, personal_learning_rate):
