@@ -18,8 +18,8 @@ for dataset in ["Mnist", "FMnist", "Cifar10"]:
             numusers = 10 
             num_glob_iters = 800 
             algorithms = ["FedAvg", "PerAvg_p", "pFedMe_p", 
-                        "FedPer_p", "LGFedAvg_p", "FedRep_p",
-                        "FedSOUL_p", "pFedBayes_p", "BPFedPD_p"] 
+                          "FedPer_p", "LGFedAvg_p", "FedRep_p",
+                          "FedSOUL_p", "pFedBayes_p", "BPFedPD_p"] 
             local_ep = [20, 20, 20, 20, 20, 20, 20, 20, 20] 
             lamda =    [15, 15, 15, 15, 15, 15, 15, 15, 15] 
             learning_rate = [0.001, 0.001, 0.01, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001] 

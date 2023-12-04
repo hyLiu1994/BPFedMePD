@@ -13,16 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 from reliability_diagrams.reliability_diagrams import reliability_diagram
-
-def get_file_path(args, loadP = False, run_idx = 0):
-    alg = args.dataset + "_" + args.datasize + "_" + args.algorithm
-    if (loadP):
-        alg += "_p"
-    alg = alg + "_" + str(args.learning_rate) + "_" + str(args.beta) + "_" + str(args.lamda) + "_" + str(args.numusers) + "u" + "_" + str(args.batch_size) + "b" + "_" + str(args.local_epochs)
-    if(args.algorithm == "pFedMe" or args.algorithm == "pFedMe_p"):
-        alg = alg + "_" + str(args.K) + "_" + str(args.personal_learning_rate)
-    alg = alg + "_" + str(run_idx)
-    return "./results/"+'{}.h5'.format(alg, args.local_epochs)    
+from utils.loadresult_utils import *
 
 def to_one_hot(y, dtype=torch.double):
     # convert a single label into a one-hot vector
@@ -111,32 +102,17 @@ def plot_calibration_error(probs, targets, path, color='darkblue'):
     plt.savefig(path, bbox_inches="tight", dpi=300)
     plt.close()
 
-def change_avg(args_pre):
-    args = copy.deepcopy(args_pre)
-    if (args.algorithm == 'PerAvg'):
-        args.beta = 0.1
-    if (args.algorithm == 'pFedMe'):
-        args.learning_rate=0.01 
-        args.personal_learning_rate=0.01
-    if (args.algorithm == 'pFedBayes'):
-        args.batch_size=100 
-    if (args.algorithm == 'BPFedPD'):
-        args.batch_size=100 
-    if (args.algorithm == 'FedSOUL'):
-        args.beta = 1.0
-    return args
-
 args = load_hypermater()
 
-# dataset_list = ["Mnist", "FMnist", "Cifar10"]
-# datasize_list = ["small", "large"]
+dataset_list = ["Mnist", "FMnist", "Cifar10"]
+datasize_list = ["small", "large"]
 
-dataset_list = ["Cifar10"]
-datasize_list = ["small"]
+# dataset_list = ["Mnist"]
+# datasize_list = ["small"]
 
 # algorithm_list = ["BPFedPD", "pFedBayes"]
 algorithm_list = ["FedAvg", "PerAvg", "pFedMe", "FedPer", "LGFedAvg", "FedRep", "FedSOUL", "pFedBayes", "BPFedPD"]
-# algorithm_list = ["BPFedPD"]
+algorithm_list = ["FedSI", "FedAvg"]
 
 for args.algorithm in algorithm_list:
     for args.dataset in dataset_list:
@@ -151,5 +127,6 @@ for args.algorithm in algorithm_list:
                 output_list = F.softmax(torch.tensor(output_list), dim=-1).numpy()
             accuracies = torch.tensor(output_list).argmax(-1).numpy()
             output_list = torch.tensor(output_list).max(-1)[0].numpy()
+            print(file_path[:-2] + "pdf")
             # reliability_diagram(label_list, accuracies, output_list , file_path[:-2] + "png")
             reliability_diagram(label_list, accuracies, output_list , file_path[:-2] + "pdf")
