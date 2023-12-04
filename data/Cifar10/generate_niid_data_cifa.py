@@ -16,9 +16,6 @@ TOTL_NUM_LABELS = 10
 data_size_str_list = ['small', 'large']
 train_data_per_client_per_label_list = [25, 475]
 test_data_per_client_per_label_list = [450, 150]
-data_size_str_list = ['large']
-train_data_per_client_per_label_list = [475]
-test_data_per_client_per_label_list = [150]
 
 for idx in range(len(data_size_str_list)):
     data_size_str = data_size_str_list[idx]
