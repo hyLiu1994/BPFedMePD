@@ -1,5 +1,6 @@
 import argparse
 from FLAlgorithms.trainmodel.OModels import *
+from FLAlgorithms.trainmodel.FedSIModel import *
 from FLAlgorithms.servers.serveravg import FedAvg
 from FLAlgorithms.servers.serverpFedMe import pFedMe
 from FLAlgorithms.servers.serverperavg import PerAvg
@@ -11,6 +12,7 @@ from FLAlgorithms.servers.serverLGFedAvg import LGFedAvg
 from FLAlgorithms.servers.serverFedSOUL import FedSOUL
 from FLAlgorithms.servers.serverFedPAC import FedPAC
 from FLAlgorithms.servers.serverFedSI import FedSI
+from FLAlgorithms.servers.serverLocalOnly import LocalOnly
 
 def load_hypermater():
     # Setting hyperpameter 
@@ -19,7 +21,7 @@ def load_hypermater():
     parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
     parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes",
                                                                               "BPFedPD", "FedPer", "LGFedAvg", "FedRep",
-                                                                              "FedSOUL", "FedSI"]) 
+                                                                              "FedSOUL", "FedSI", "LocalOnly"]) 
     # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
     parser.add_argument("--batch_size", type=int, default=50)
     parser.add_argument("--add_new_client", type=int, default=0)
@@ -117,5 +119,8 @@ def server_select(algorithm, model, exp_idx, args):
 
     if(algorithm == "FedSI"):
         server = FedSI(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args, args.only_one_local)
+
+    if(algorithm == "LocalOnly"):
+        server = LocalOnly(model, exp_idx, args)
 
     return server 

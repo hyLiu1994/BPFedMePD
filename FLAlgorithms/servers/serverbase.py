@@ -6,8 +6,22 @@ from utils.model_utils import Metrics
 import copy
 
 class Server:
-    def __init__(self, device, dataset, datasize, algorithm, model, batch_size, learning_rate ,beta, lamda,
-                 num_glob_iters, local_epochs, optimizer,num_users, times, only_one_local):
+    def __init__(self, 
+                 device, 
+                 dataset, 
+                 datasize, 
+                 algorithm, 
+                 model, 
+                 batch_size, 
+                 learning_rate,
+                 beta, 
+                 lamda,
+                 num_glob_iters, 
+                 local_epochs, 
+                 optimizer,
+                 num_users, 
+                 times, 
+                 only_one_local):
 
         # Set up the main attributes
         self.max_acc = 0
@@ -220,12 +234,12 @@ class Server:
 
         return ids, num_samples, tot_correct, output_list, y_list
 
-    def train_error_and_loss_persionalized_model(self):
+    def train_error_and_loss_persionalized_model(self, hasPMB=False):
         num_samples = []
         tot_correct = []
         losses = []
         for c in self.users:
-            ct, cl, ns = c.train_error_and_loss_persionalized_model() 
+            ct, cl, ns = c.train_error_and_loss_persionalized_model(hasPMB=hasPMB) 
             tot_correct.append(ct*1.0)
             num_samples.append(ns)
             losses.append(cl*1.0)
@@ -255,9 +269,9 @@ class Server:
         print("Average Global Trainning Accurancy: ", train_acc)
         print("Average Global Trainning Loss: ",train_loss)
 
-    def evaluate_personalized_model(self, hasPMB=True):
+    def evaluate_personalized_model(self, hasPMB=False):
         stats = self.test_persionalized_model(hasPMB=hasPMB)  
-        stats_train = self.train_error_and_loss_persionalized_model()
+        stats_train = self.train_error_and_loss_persionalized_model(hasPMB=hasPMB)
         glob_acc = np.sum(stats[2])*1.0/np.sum(stats[1])
         train_acc = np.sum(stats_train[2])*1.0/np.sum(stats_train[1])
         # train_loss = np.dot(stats_train[3], stats_train[1])*1.0/np.sum(stats_train[1])

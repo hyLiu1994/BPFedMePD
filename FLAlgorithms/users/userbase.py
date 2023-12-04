@@ -395,22 +395,23 @@ class User:
             #@loss += self.loss(output, y)
             #print(self.id + ", Test Accuracy:", test_acc / y.shape[0] )
             #print(self.id + ", Test Loss:", loss)
-        self.update_parameters(self.local_model)
+        if (hasPMB):
+            self.update_parameters(self.local_model)
         return test_acc, y.shape[0], output_list, y_list 
 
-    def train_error_and_loss_persionalized_model(self):
+    def train_error_and_loss_persionalized_model(self, hasPMB = False):
         self.model.eval()
         train_acc = 0
         loss = 0
-        self.update_parameters(self.persionalized_model_bar)
+        if (hasPMB):
+            self.update_parameters(self.persionalized_model_bar)
         for x, y in self.trainloaderfull:
             x, y = x.to(self.device), y.to(self.device)
             output = self.model(x)
             train_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
             loss += self.loss(output, y)
-            #print(self.id + ", Train Accuracy:", train_acc)
-            #print(self.id + ", Train Loss:", loss)
-        self.update_parameters(self.local_model)
+        if (hasPMB):
+            self.update_parameters(self.local_model)
         return train_acc, loss , self.train_samples
     
     def get_next_train_batch(self):

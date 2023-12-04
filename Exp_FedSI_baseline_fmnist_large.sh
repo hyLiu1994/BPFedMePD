@@ -1,3 +1,4 @@
+python main.py --dataset FMnist --datasize large --algorithm LocalOnly --num_glob_iters 800 --times 2 & 
 python main.py --dataset FMnist --datasize large --algorithm FedAvg --num_glob_iters 800 --times 2 & 
 python main.py --dataset FMnist --datasize large --algorithm FedPer --num_glob_iters 800 --times 2 & 
 python main.py --dataset FMnist --datasize large --algorithm FedRep --num_glob_iters 800 --times 2 & 
