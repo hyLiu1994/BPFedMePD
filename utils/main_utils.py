@@ -13,6 +13,7 @@ from FLAlgorithms.servers.serverFedSOUL import FedSOUL
 from FLAlgorithms.servers.serverFedPAC import FedPAC
 from FLAlgorithms.servers.serverFedSI import FedSI
 from FLAlgorithms.servers.serverLocalOnly import LocalOnly
+from FLAlgorithms.servers.serverFedAvgFT import FedAvgFT
 
 def load_hypermater():
     # Setting hyperpameter 
@@ -20,7 +21,7 @@ def load_hypermater():
     parser.add_argument("--dataset", type=str, default="Mnist", choices=["Mnist", "FMnist", "Cifar10"])
     parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
     parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes", "FedPAC",
-                                                                              "BPFedPD", "FedPer", "LGFedAvg", "FedRep",
+                                                                              "BPFedPD", "FedPer", "LGFedAvg", "FedRep", "FedAvgFT",
                                                                               "FedSOUL", "FedSI", "LocalOnly"]) 
     # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
     parser.add_argument("--batch_size", type=int, default=50)
@@ -30,6 +31,7 @@ def load_hypermater():
     parser.add_argument("--beta", type=float, default=1.0, help="Average moving parameter for pFedMe, or Second learning rate of Per-FedAvg")
     parser.add_argument("--lamda", type=int, default=15, help="Regularization term")
     parser.add_argument("--num_glob_iters", type=int, default=800)
+    parser.add_argument("--num_fineturn_iters", type=int, default=0)
     parser.add_argument("--local_epochs", type=int, default=20)
     parser.add_argument("--optimizer", type=str, default="SGD")
     parser.add_argument("--numusers", type=int, default=10, help="Number of Users per round")
@@ -37,6 +39,7 @@ def load_hypermater():
     parser.add_argument("--personal_learning_rate", type=float, default=0.001, help="Persionalized learning rate to caculate theta aproximately using K steps")
     parser.add_argument("--times", type=int, default=1, help="running time")
     parser.add_argument("--gpu", type=int, default=0, help="Which GPU to run the experiments, -1 mean CPU, 0,1,2 for GPU")
+
 
     parser.add_argument("--subnetwork_rate", type=float, default=0.01)
     parser.add_argument("--weight_scale", type=float, default=0.1)
@@ -111,5 +114,7 @@ def server_select(model, exp_idx, args):
         server = FedSI(model, exp_idx, args)
     elif(args.algorithm == "LocalOnly"):
         server = LocalOnly(model, exp_idx, args)
+    elif (args.algorithm == "FedAvgFT"):
+        server = FedAvgFT(model, exp_idx, args)
 
     return server 

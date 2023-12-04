@@ -1,6 +1,7 @@
 # Mnist 
 python main.py --dataset Mnist --datasize large --algorithm LocalOnly --num_glob_iters 800 --times 2 & 
 python main.py --dataset Mnist --datasize large --algorithm FedAvg --num_glob_iters 800 --times 2 & 
+python main.py --dataset Mnist --datasize large --algorithm FedAvgFT --num_glob_iters 800 --num_fineturn_iters 100 --times 2 & 
 python main.py --dataset Mnist --datasize large --algorithm FedPer --num_glob_iters 800 --times 2 & 
 python main.py --dataset Mnist --datasize large --algorithm FedRep --num_glob_iters 800 --times 2 & 
 python main.py --dataset Mnist --datasize large --algorithm LGFedAvg --num_glob_iters 800 --times 2 & 
