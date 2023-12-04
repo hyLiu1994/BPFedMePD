@@ -14,6 +14,7 @@ from FLAlgorithms.servers.serverFedPAC import FedPAC
 from FLAlgorithms.servers.serverFedSI import FedSI
 from FLAlgorithms.servers.serverLocalOnly import LocalOnly
 from FLAlgorithms.servers.serverFedAvgFT import FedAvgFT
+from FLAlgorithms.servers.serverFedSIFac import FedSIFac
 
 def load_hypermater():
     # Setting hyperpameter 
@@ -22,7 +23,7 @@ def load_hypermater():
     parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
     parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes", "FedPAC",
                                                                               "BPFedPD", "FedPer", "LGFedAvg", "FedRep", "FedAvgFT",
-                                                                              "FedSOUL", "FedSI", "LocalOnly"]) 
+                                                                              "FedSOUL", "FedSI", "LocalOnly", "FedSIFac"]) 
     # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
     parser.add_argument("--batch_size", type=int, default=50)
     parser.add_argument("--add_new_client", type=int, default=0)
@@ -33,7 +34,7 @@ def load_hypermater():
     parser.add_argument("--num_glob_iters", type=int, default=800)
     parser.add_argument("--num_fineturn_iters", type=int, default=0)
     parser.add_argument("--local_epochs", type=int, default=20)
-    parser.add_argument("--optimizer", type=str, default="SGD")
+    parser.add_argument("--optimizer", type=str, default="SGD",choices=["SGD", "Adam"])
     parser.add_argument("--numusers", type=int, default=10, help="Number of Users per round")
     parser.add_argument("--K", type=int, default=5, help="Computation steps")
     parser.add_argument("--personal_learning_rate", type=float, default=0.001, help="Persionalized learning rate to caculate theta aproximately using K steps")
@@ -116,5 +117,7 @@ def server_select(model, exp_idx, args):
         server = LocalOnly(model, exp_idx, args)
     elif (args.algorithm == "FedAvgFT"):
         server = FedAvgFT(model, exp_idx, args)
+    elif (args.algorithm == "FedSIFac"):
+        server = FedSIFac(model, exp_idx, args)
 
     return server 

@@ -29,7 +29,7 @@ from torchvision.transforms import ToTensor
 
 # Implementation for FedAvg clients
 
-class UserFedSI(User):
+class UserFedSIFac(User):
     def __init__(self, numeric_id, train_data, test_data, model, args):
         super().__init__(numeric_id, train_data, test_data, model[0], args)
         self.device = args.device
@@ -106,21 +106,11 @@ class UserFedSI(User):
         diag_la = Laplace(self.model, 'classification', 
                           subset_of_weights='all', 
                           hessian_structure='diag')
-        self.subnetwork_mask = LargestVarianceDiagLaplaceSubnetMask(self.model, 
-                                                                    n_params_subnet=int(self.n_params * self.subnetwork_rate), 
-                                                                    diag_laplace_model = diag_la)
-        subnetwork_indices = self.subnetwork_mask.select(self.trainloader)
-        # print("subnetwork_indices", subnetwork_indices)  
 
         la = Laplace(self.model, 'classification',
-                    subset_of_weights='subnetwork',
-                    hessian_structure='full',
-                    subnetwork_indices=subnetwork_indices) 
-        sigma = la.fit(self.trainloader)
-        # print("sigma", sigma.mean())
-        diag_sigma = torch.diag(sigma)
-        # print("diag_sigma", diag_sigma.mean())
-        self.sigma = torch.zeros(parameters_to_vector(self.model.parameters()).shape).to(self.device)
-        self.sigma[subnetwork_indices] = diag_sigma
+                    subset_of_weights='all',
+                    hessian_structure='diag') 
+        diag_sigma = la.fit(self.trainloader)
+        self.sigma = diag_sigma
 
         return LOSS
