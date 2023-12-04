@@ -129,10 +129,12 @@ dmypy.json
 .pyre/
 
 # data
-data/Cifar10/cifar-10-batches-py
+data/Cifar10/cifar-10-batches-py/*
+data/Cifar10/cifar-10-python.tar.gz
 data/Cifar10/data
 data/FMnist/FashionMNIST
 data/FMnist/data
+data/FashionMNIST/raw/*
 data/Mnist/MNIST
 data/Mnist/data
 data/Synthetic
@@ -140,5 +142,7 @@ models/Cifar10
 models/FMnist
 models/Mnist
 
-
+# result
+results_BPFed/*
+results/*
 .vscode
