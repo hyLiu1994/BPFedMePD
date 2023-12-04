@@ -10,38 +10,34 @@ import numpy as np
 
 # Implementation for FedAvg Server
 class BPFedPD(Server):
-    def __init__(self, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
-                 local_epochs, optimizer, num_users, times, device, personal_learning_rate, zeta, only_one_local = False,
-                 output_dim=10):
-        super().__init__(device, dataset, datasize, algorithm, model[0], batch_size, learning_rate, beta, lamda, num_glob_iters,
-                         local_epochs, optimizer, num_users, times, only_one_local)
+    def __init__(self, model, times, args, output_dim=10):
+        super().__init__(model[0], times, args)
 
         self.mark_personalized_module = model[0].get_mark_personlized_module(-1)
         # self.mark_personalized_module[-1] = 1
         # self.mark_personalized_module[-2] = 1
         # self.mark_personalized_module[-3] = 0 
         # self.mark_personalized_module[-4] = 0 
-        self.zeta = zeta
+        self.zeta = args.zeta
         print("mark_personalized_module", self.mark_personalized_module)
         # Initialize data for all  users
-        data = read_data(dataset, datasize)
+        data = read_data(args.dataset, args.datasize)
 
-        if (only_one_local):
+        if (args.only_one_local):
             self.total_users = 1
         else:
             self.total_users = len(data[0])
 
-        self.personal_learning_rate = personal_learning_rate
+        self.personal_learning_rate = args.personal_learning_rate
 
         print('clients initializting...')
         for i in tqdm(range(self.total_users), total=self.total_users):
-            id, train, test = read_user_data(i, data, dataset)
-            user = UserBPFedPD(id, train, test, model, batch_size, learning_rate,beta,lamda, local_epochs, optimizer,
-                                 personal_learning_rate, device, zeta, self.mark_personalized_module, output_dim=output_dim)
+            id, train, test = read_user_data(i, data, args.dataset)
+            user = UserBPFedPD(id, train, test, model, self.mark_personalized_module, args, output_dim=output_dim)
             self.users.append(user)
             self.total_train_samples += user.train_samples 
 
-        print("Number of users / total users:", num_users, " / " ,self.total_users)
+        print("Number of users / total users:", args.numusers, " / " ,self.total_users)
         print("Finished creating FedAvg server.")
 
     def send_grads(self):

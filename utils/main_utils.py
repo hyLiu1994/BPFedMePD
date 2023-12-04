@@ -19,7 +19,7 @@ def load_hypermater():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="Mnist", choices=["Mnist", "FMnist", "Cifar10"])
     parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
-    parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes",
+    parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes", "FedPAC",
                                                                               "BPFedPD", "FedPer", "LGFedAvg", "FedRep",
                                                                               "FedSOUL", "FedSI", "LocalOnly"]) 
     # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
@@ -62,65 +62,54 @@ def load_hypermater():
 def model_select(args):
     if (args.dataset == "Cifar10"):
         if (args.algorithm == 'pFedBayes' or args.algorithm == 'BPFedPD'):
-            model = pCIFARNet(10).to(args.device), "pCIFARNet"
+            model = pCIFARNet(args.device, 10).to(args.device), "pCIFARNet"
         elif (args.algorithm == 'FedSI'):
             model = CIFARNetFedSI(10).to(args.device), "CIFARNetFedSI"
         elif (args.algorithm == 'FedSOUL' or args.algorithm == 'FedPAC'):
-            model = CIFARNetSoul(10).to(args.device), "pCIFARNet"
+            model = CIFARNetSoul(args.device, 10).to(args.device), "pCIFARNet"
         else: 
             model = CifarNet().to(args.device), "CifarNet"
 
     if (args.dataset == 'Mnist' or args.dataset == "FMnist"):
         if (args.algorithm == 'pFedBayes'):
             # model = pBNN(784, 100, 10, args.device, args.weight_scale, args.rho_offset, args.zeta).to(args.device), "pbnn"
-            model = pBNN_v2().to(args.device), "pbnn_v2"  
+            model = pBNN_v2(args.device).to(args.device), "pbnn_v2"  
         elif (args.algorithm == 'FedSI'):
             model = DNNFedSI().to(args.device), "DNNFedSI"  
         elif (args.algorithm == 'BPFedPD'):
-            model = pBNN_v2().to(args.device), "pbnn_v2"
+            model = pBNN_v2(args.device).to(args.device), "pbnn_v2"
         elif (args.algorithm == 'FedSOUL' or args.algorithm == 'FedPAC'):
-            model = DNNSoul(10).to(args.device), "pCIFARNet"
+            model = DNNSoul(args.device, 10).to(device = args.device), "pCIFARNet"
         else:
             model = DNN(784, 100, 10).to(args.device), "dnn"
 
     return model
 
-def server_select(algorithm, model, exp_idx, args):
+def server_select(model, exp_idx, args):
     # select algorithm
-    if(algorithm == "FedAvg"):
-        server = FedAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.only_one_local)
-    
-    if(algorithm == "pFedMe"):
-        server = pFedMe(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx, args.only_one_local)
-
-    if(algorithm == "FedPer"):
-        server = FedPer(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx, args.only_one_local)
-
-    if(algorithm == "FedRep"):
-        server = FedRep(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx, args.only_one_local)
-
-    if(algorithm == "LGFedAvg"):
-        server = LGFedAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, args.K, args.personal_learning_rate, exp_idx, args.only_one_local)
-
-    if(algorithm == "PerAvg"):
-        server = PerAvg(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.only_one_local)
-
-    if (algorithm == "pFedBayes"):
-        server = pFedBayes(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.zeta, args.only_one_local)
-    
-    if (algorithm == "BPFedPD"):
-        server = BPFedPD(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.zeta, args.only_one_local)
-    
-    if (algorithm == "FedSOUL"):
-        server = FedSOUL(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.only_one_local)
-
-    if (algorithm == "FedPAC"):
-        server = FedPAC(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.only_one_local)
-
-    if(algorithm == "FedSI"):
-        server = FedSI(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args, args.only_one_local)
-
-    if(algorithm == "LocalOnly"):
+    if(args.algorithm == "FedAvg"):
+        server = FedAvg(model, exp_idx, args)
+    elif(args.algorithm == "pFedMe"):
+        server = pFedMe(model, exp_idx, args)
+    elif(args.algorithm == "FedPer"):
+        server = FedPer(model, exp_idx, args)
+    elif(args.algorithm == "FedRep"):
+        server = FedRep(model, exp_idx, args)
+    elif(args.algorithm == "LGFedAvg"):
+        server = LGFedAvg(model, exp_idx, args)
+    elif(args.algorithm == "PerAvg"):
+        server = PerAvg(model, exp_idx, args)
+    elif (args.algorithm == "pFedBayes"):
+        server = pFedBayes(model, exp_idx, args)
+    elif (args.algorithm == "BPFedPD"):
+        server = BPFedPD(model, exp_idx, args)
+    elif (args.algorithm == "FedSOUL"):
+        server = FedSOUL(model, exp_idx, args)
+    elif (args.algorithm == "FedPAC"):
+        server = FedPAC(model, exp_idx, args)
+    elif(args.algorithm == "FedSI"):
+        server = FedSI(model, exp_idx, args)
+    elif(args.algorithm == "LocalOnly"):
         server = LocalOnly(model, exp_idx, args)
 
     return server 

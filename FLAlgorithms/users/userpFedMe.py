@@ -10,18 +10,16 @@ import copy
 
 # Implementation for pFeMe clients
 class UserpFedMe(User):
-    def __init__(self, device, numeric_id, train_data, test_data, model, batch_size, learning_rate,beta,lamda,
-                 local_epochs, optimizer, K, personal_learning_rate):
-        super().__init__(device, numeric_id, train_data, test_data, model[0], batch_size, learning_rate, beta, lamda,
-                         local_epochs)
+    def __init__(self, numeric_id, train_data, test_data, model, args):
+        super().__init__(numeric_id, train_data, test_data, model[0], args)
 
         if(model[1] == "Mclr_CrossEntropy"):
             self.loss = nn.CrossEntropyLoss()
         else:
             self.loss = nn.NLLLoss()
 
-        self.K = K
-        self.personal_learning_rate = personal_learning_rate
+        self.K = args.K
+        self.personal_learning_rate = args.personal_learning_rate
         self.optimizer = pFedMeOptimizer(self.model.parameters(), lr=self.personal_learning_rate, lamda=self.lamda)
 
     def set_grads(self, new_grads):

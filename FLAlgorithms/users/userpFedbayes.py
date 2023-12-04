@@ -5,18 +5,16 @@ from FLAlgorithms.users.userbase import User
 
 
 class UserpFedBayes(User):
-    def __init__(self, numeric_id, train_data, test_data, model, batch_size, learning_rate, beta, lamda,
-                 local_epochs, optimizer, personal_learning_rate, device, zeta, output_dim=10):
-        super().__init__(device, numeric_id, train_data, test_data, model[0], batch_size, learning_rate, beta, lamda,
-                         local_epochs, output_dim = output_dim)
+    def __init__(self, numeric_id, train_data, test_data, model, args, output_dim=10):
+        super().__init__(numeric_id, train_data, test_data, model[0], args, output_dim = output_dim)
 
         self.output_dim = output_dim
-        self.batch_size = batch_size
+        self.batch_size = args.batch_size
         self.loss = nn.NLLLoss()
-        self.zeta = zeta
+        self.zeta = args.zeta
         self.K = 5
-        self.N_Batch = len(train_data) // batch_size
-        self.personal_learning_rate = personal_learning_rate
+        self.N_Batch = len(train_data) // args.batch_size
+        self.personal_learning_rate = args.personal_learning_rate
         self.optimizer1 = torch.optim.Adam(self.personal_model.parameters(), lr=self.personal_learning_rate)
         self.optimizer2 = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
 

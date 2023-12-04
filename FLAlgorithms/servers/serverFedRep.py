@@ -7,26 +7,24 @@ from utils.model_utils import read_data, read_user_data
 import numpy as np
  
 class FedRep(Server):
-    def __init__(self, device,  dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
-                 local_epochs, optimizer, num_users, K, personal_learning_rate, times, only_one_local = False):
-        super().__init__(device, dataset, datasize, algorithm, model[0], batch_size, learning_rate, beta, lamda, num_glob_iters,
-                         local_epochs, optimizer, num_users, times, only_one_local)
+    def __init__(self, model, times, args):
+        super().__init__(model[0], times, args)
 
         # Initialize data for all  users
         self.mark_personalized_module = model[0].get_mark_personlized_module(-1)
         print("mark_personalized_module", self.mark_personalized_module)
-        data = read_data(dataset, datasize)
+        data = read_data(args.dataset, args.datasize)
 
-        if (only_one_local):
+        if (args.only_one_local):
             self.total_users = 1
         else:
             self.total_users = len(data[0])
 
-        self.K = K
-        self.personal_learning_rate = personal_learning_rate
+        self.K = args.K
+        self.personal_learning_rate = args.personal_learning_rate
         for i in range(self.total_users):
-            id, train , test = read_user_data(i, data, dataset)
-            user = UserFedRep(device, id, train, test, model, batch_size, learning_rate, beta, lamda, local_epochs, optimizer, K, personal_learning_rate)
+            id, train , test = read_user_data(i, data, args.dataset)
+            user = UserFedRep(id, train, test, model, args)
             self.users.append(user)
             self.total_train_samples += user.train_samples
 

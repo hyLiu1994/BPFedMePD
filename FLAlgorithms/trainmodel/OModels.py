@@ -158,16 +158,16 @@ class pBNN(nn.Module):
         return module_mark_list
 
 class pBNN_v2(ModuleWrapper):
-    def __init__(self, n_classes=10, k=1., **kwargs):
+    def __init__(self, device, n_classes=10, k=1., **kwargs):
         super(pBNN_v2, self).__init__(**kwargs)
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = device 
         self.features = nn.Sequential(OrderedDict([
             ('flatten', Flatten()), 
         ])) 
         self.classifier = nn.Sequential(OrderedDict([ 
-            ('fc1', bayes.FFGLinear(784, 100)), 
+            ('fc1', bayes.FFGLinear(784, 100, device)), 
             ('relu', nn.ReLU()), 
-            ('linear', bayes.FFGLinear(100, n_classes)), 
+            ('linear', bayes.FFGLinear(100, n_classes, device)), 
             ('logsoftmax', nn.LogSoftmax(dim=1)), 
         ])) 
         self.mark_list = [4, 4]
@@ -202,23 +202,23 @@ class Flatten(nn.Module):
         return x.view(x.size(0), -1)
 
 class pCIFARNet(ModuleWrapper):
-    def __init__(self, n_classes=10, k=1., **kwargs):
+    def __init__(self, device, n_classes=10, k=1., **kwargs):
         super(pCIFARNet, self).__init__(**kwargs)
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = device
         self.features = nn.Sequential(OrderedDict([
-            ('conv1', bayes.BayesConv2d(3, 6, 5)), 
+            ('conv1', bayes.BayesConv2d(3, 6, 5, device)), 
             ('relu1', nn.ReLU()),
             ('maxpool', nn.MaxPool2d(2, 2)), 
-            ('conv2', bayes.BayesConv2d(6, 16, 5)), 
+            ('conv2', bayes.BayesConv2d(6, 16, 5, device)), 
             ('relu2', nn.ReLU()), 
             ('flatten', Flatten()), 
         ])) 
         self.classifier = nn.Sequential(OrderedDict([ 
-            ('fc1', bayes.FFGLinear(4 * 16 * 25, 120)), 
+            ('fc1', bayes.FFGLinear(4 * 16 * 25, 120, device)), 
             ('relu3', nn.ReLU()), 
-            ('fc2', bayes.FFGLinear(120, 84)), 
+            ('fc2', bayes.FFGLinear(120, 84, device)), 
             ('relu4', nn.ReLU()), 
-            ('linear', bayes.FFGLinear(84, n_classes)), 
+            ('linear', bayes.FFGLinear(84, n_classes, device)), 
             ('logsoftmax', nn.LogSoftmax(dim=1)), 
         ])) 
         self.mark_list = [4, 4, 4, 4, 4]
@@ -249,16 +249,16 @@ class pCIFARNet(ModuleWrapper):
         return module_mark_list
     
 class DNNSoul(ModuleWrapper):
-    def __init__(self, n_classes=10, k=1., **kwargs):
+    def __init__(self, device, n_classes=10, k=1., **kwargs):
         super(DNNSoul, self).__init__(**kwargs)
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = device
         self.features = nn.Sequential(OrderedDict([
             ('flatten', Flatten()), 
         ])) 
         self.classifier = nn.Sequential(OrderedDict([ 
             ('fc1', nn.Linear(784, 100)), 
             ('relu', nn.ReLU()), 
-            ('linear', bayes.FFGLinear(100, n_classes)), 
+            ('linear', bayes.FFGLinear(100, n_classes, device)), 
             ('logsoftmax', nn.LogSoftmax(dim=1)), 
         ])) 
         self.mark_list = [2, 4]
@@ -289,9 +289,9 @@ class DNNSoul(ModuleWrapper):
         return module_mark_list
 
 class CIFARNetSoul(ModuleWrapper):
-    def __init__(self, n_classes=10, k=1., **kwargs):
+    def __init__(self, device, n_classes=10, k=1., **kwargs):
         super(CIFARNetSoul, self).__init__(**kwargs)
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = device
         self.features = nn.Sequential(OrderedDict([
             ('conv1', nn.Conv2d(3, 6, 5)), 
             ('relu1', nn.ReLU()),
@@ -305,7 +305,7 @@ class CIFARNetSoul(ModuleWrapper):
             ('relu3', nn.ReLU()), 
             ('fc2', nn.Linear(120, 84)), 
             ('relu4', nn.ReLU()), 
-            ('linear', bayes.FFGLinear(84, n_classes)), 
+            ('linear', bayes.FFGLinear(84, n_classes, device)), 
             ('logsoftmax', nn.LogSoftmax(dim=1)), 
         ])) 
         self.mark_list = [2, 2, 2, 2, 4]

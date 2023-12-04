@@ -10,26 +10,22 @@ import numpy as np
 
 # Implementation for FedAvg Server
 class pFedBayes(Server):
-    def __init__(self, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
-                 local_epochs, optimizer, num_users, times, device, personal_learning_rate, zeta, only_one_local = False,
-                 output_dim=10):
-        super().__init__(device, dataset, datasize, algorithm, model[0], batch_size, learning_rate, beta, lamda, num_glob_iters,
-                         local_epochs, optimizer, num_users, times, only_one_local)
+    def __init__(self, model, times, args, output_dim=10):
+        super().__init__(model[0], times, args)
 
         # Initialize data for all  users
         self.mark_personalized_module = model[0].get_mark_personlized_module(0)
-        data = read_data(dataset, datasize)
-        self.personal_learning_rate = personal_learning_rate
+        data = read_data(args.dataset, args.datasize)
+        self.personal_learning_rate = args.personal_learning_rate
         total_users = len(data[0])
         print('clients initializting...')
         for i in tqdm(range(total_users), total=total_users):
-            id, train, test = read_user_data(i, data, dataset)
-            user = UserpFedBayes(id, train, test, model, batch_size, learning_rate,beta,lamda, local_epochs, optimizer,
-                                 personal_learning_rate, device, zeta, output_dim=output_dim)
+            id, train, test = read_user_data(i, data, args.dataset)
+            user = UserpFedBayes(id, train, test, model, args, output_dim=output_dim)
             self.users.append(user)
             self.total_train_samples += user.train_samples
             
-        print("Number of users / total users:", num_users, " / " ,total_users)
+        print("Number of users / total users:", args.numusers, " / " ,total_users)
         print("Finished creating FedAvg server.")
 
     def send_grads(self):

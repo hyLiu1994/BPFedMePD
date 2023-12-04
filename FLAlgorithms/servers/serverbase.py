@@ -6,43 +6,27 @@ from utils.model_utils import Metrics
 import copy
 
 class Server:
-    def __init__(self, 
-                 device, 
-                 dataset, 
-                 datasize, 
-                 algorithm, 
-                 model, 
-                 batch_size, 
-                 learning_rate,
-                 beta, 
-                 lamda,
-                 num_glob_iters, 
-                 local_epochs, 
-                 optimizer,
-                 num_users, 
-                 times, 
-                 only_one_local):
-
+    def __init__(self, model, times, args):
         # Set up the main attributes
         self.max_acc = 0
         self.output_list = []
-        self.only_one_local = only_one_local
+        self.only_one_local = args.only_one_local
         self.y_list = []
-        self.device = device
-        self.dataset = dataset
-        self.datasize = datasize
-        self.num_glob_iters = num_glob_iters
-        self.local_epochs = local_epochs
-        self.batch_size = batch_size
-        self.learning_rate = learning_rate
+        self.device = args.device
+        self.dataset = args.dataset
+        self.datasize = args.datasize
+        self.num_glob_iters = args.num_glob_iters
+        self.local_epochs = args.local_epochs
+        self.batch_size = args.batch_size
+        self.learning_rate = args.learning_rate
         self.total_train_samples = 0
         self.model = copy.deepcopy(model)
         self.users = []
         self.selected_users = []
-        self.num_users = num_users
-        self.beta = beta
-        self.lamda = lamda
-        self.algorithm = algorithm
+        self.num_users = args.numusers
+        self.beta = args.beta
+        self.lamda = args.lamda
+        self.algorithm = args.algorithm
         # self.rs_train_acc, self.rs_train_loss, self.rs_glob_acc,                  self.rs_train_acc_per, self.rs_train_loss_per, self.rs_glob_acc_per = [], [], [], [], [], []
         self.rs_train_acc, self.rs_train_loss, self.rs_glob_acc, self.rs_per_acc, self.rs_train_acc_per, self.rs_train_loss_per, self.rs_glob_acc_per = [], [], [], [], [], [], []
         self.times = times

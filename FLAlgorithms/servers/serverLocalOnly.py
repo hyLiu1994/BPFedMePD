@@ -10,8 +10,7 @@ import numpy as np
 
 class LocalOnly(Server):
     def __init__(self, model, exp_idx, args):
-        super().__init__(args.device, args.dataset, args.datasize, args.algorithm, model[0], args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters,
-                         args.local_epochs, args.optimizer, args.numusers, exp_idx, args.only_one_local)
+        super().__init__(model[0], exp_idx, args)
 
         # Initialize data for all  users
         self.mark_personalized_module = model[0].get_mark_personlized_module(0)

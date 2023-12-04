@@ -11,22 +11,20 @@ from torch.nn.utils import parameters_to_vector
 # Implementation for TCYB Server
 
 class FedSI(Server):
-    def __init__(self, device, dataset, datasize, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,
-                 local_epochs, optimizer, num_users, times, args, only_one_local = False):
-        super().__init__(device, dataset, datasize, algorithm, model[0], batch_size, learning_rate, beta, lamda, num_glob_iters,
-                         local_epochs, optimizer, num_users, times, only_one_local)
+    def __init__(self, model, times, args):
+        super().__init__(model[0], times, args)
 
         # Initialize data for all  users
         self.mark_personalized_module = model[0].get_mark_personlized_module(-1)
         print("mark_personalized_module", self.mark_personalized_module)
 
-        data = read_data(dataset, datasize)
-        self.device = device
+        data = read_data(args.dataset, args.datasize)
+        self.device = args.device
         self.subnetwork_rate = args.subnetwork_rate
         total_users = len(data[0])
         for i in range(total_users):
-            id, train , test = read_user_data(i, data, dataset)
-            user = UserFedSI(device, id, train, test, model, batch_size, learning_rate, beta, lamda, local_epochs, args)
+            id, train , test = read_user_data(i, data, args.dataset)
+            user = UserFedSI(id, train, test, model, args)
             self.users.append(user)
             self.total_train_samples += user.train_samples
             
@@ -35,9 +33,9 @@ class FedSI(Server):
         # Cifar10
         self.lamda = 1e-4
         self.n_params = len(parameters_to_vector(self.model.parameters()).detach())
-        self.global_sigma = torch.zeros(parameters_to_vector(self.model.parameters()).shape).to(device)
+        self.global_sigma = torch.zeros(parameters_to_vector(self.model.parameters()).shape).to(args.device)
         self.global_sigma += 1 / self.lamda
-        print("Number of users / total users:",num_users, " / " ,total_users)
+        print("Number of users / total users:", args.numusers, " / " ,total_users)
         print("Finished creating FedSI server.")
 
     def send_grads(self, AddNewClient = False):

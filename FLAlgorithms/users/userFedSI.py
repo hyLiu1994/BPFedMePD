@@ -30,11 +30,9 @@ from torchvision.transforms import ToTensor
 # Implementation for FedAvg clients
 
 class UserFedSI(User):
-    def __init__(self, device, numeric_id, train_data, test_data, model, batch_size, learning_rate, beta, lamda,
-                 local_epochs, args):
-        super().__init__(device, numeric_id, train_data, test_data, model[0], batch_size, learning_rate, beta, lamda,
-                         local_epochs)
-        self.device = device
+    def __init__(self, numeric_id, train_data, test_data, model, args):
+        super().__init__(numeric_id, train_data, test_data, model[0], args)
+        self.device = args.device
         self.loss = nn.CrossEntropyLoss()
         # Cifar10
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)

@@ -9,8 +9,7 @@ from FLAlgorithms.users.userbase import User
 # Implementation for LocalOnly clients
 class userLocalOnly(User):
     def __init__(self, numeric_id, train_data, test_data, model, args):
-        super().__init__(args.device, numeric_id, train_data, test_data, model[0], args.batch_size, args.learning_rate, args.beta, args.lamda,
-                         args.local_epochs)
+        super().__init__(numeric_id, train_data, test_data, model[0], args)
 
         self.loss = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)

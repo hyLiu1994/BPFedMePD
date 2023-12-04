@@ -14,7 +14,7 @@ def main(args):
         print("---------------Running time:", i, "------------")
         # Generate model
         model = model_select(args)
-        server = server_select(args.algorithm, model, i, args) 
+        server = server_select(model, i, args) 
 
         server.train(args.add_new_client)
         if (isinstance(model[0], pBNN)):

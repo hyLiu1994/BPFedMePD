@@ -10,7 +10,7 @@ from .layers.misc import ModuleWrapper
 
 global_eps = 1
 class BayesConv2d(ModuleWrapper):
-    def __init__(self, in_channels, out_channels, kernel_size,
+    def __init__(self, in_channels, out_channels, kernel_size, device,
                  stride=1, padding=0, dilation=1, bias=True, priors=None):
 
         super(BayesConv2d, self).__init__()
@@ -22,7 +22,7 @@ class BayesConv2d(ModuleWrapper):
         self.dilation = dilation
         self.groups = 1
         self.use_bias = bias
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = device
 
         if priors is None:
             priors = {
@@ -85,12 +85,12 @@ class BayesConv2d(ModuleWrapper):
         return self.W_mu, self.W_rho
 
 class FFGLinear(ModuleWrapper):
-    def __init__(self, in_features, out_features, bias=True, priors=None):
+    def __init__(self, in_features, out_features, device, bias=True, priors=None):
         super(FFGLinear, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.use_bias = bias
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = device
 
         if priors is None:
             priors = {

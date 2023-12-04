@@ -8,22 +8,20 @@ from torch.distributions.kl import kl_divergence
 from torch.nn import functional as F
 
 class UserBPFedPD(User):
-    def __init__(self, numeric_id, train_data, test_data, model, batch_size, learning_rate, beta, lamda,
-                 local_epochs, optimizer, personal_learning_rate, device, zeta, mark_personalized_module, output_dim=10):
-        super().__init__(device, numeric_id, train_data, test_data, model[0], batch_size, learning_rate, beta, lamda,
-                         local_epochs, output_dim = output_dim)
+    def __init__(self, numeric_id, train_data, test_data, model, mark_personalized_module, args, output_dim=10):
+        super().__init__(numeric_id, train_data, test_data, model[0], args, output_dim = output_dim)
 
         self.output_dim = output_dim
-        self.batch_size = batch_size
-        self.N_Batch = len(train_data) // batch_size
+        self.batch_size = args.batch_size
+        self.N_Batch = len(train_data) // args.batch_size
 
         self.loss = nn.NLLLoss()
         self.mark_personalized_module = mark_personalized_module
         # print("mark_personalized_module", self.mark_personalized_module)
-        self.zeta = zeta
+        self.zeta = args.zeta
 
         self.K = 5
-        self.personal_learning_rate = personal_learning_rate
+        self.personal_learning_rate = args.personal_learning_rate
         self.optimizer1_p = torch.optim.Adam(self.personal_model.classifier.linear.parameters(), lr=self.personal_learning_rate)
         self.optimizer1 = torch.optim.Adam(self.personal_model.parameters(), lr=self.personal_learning_rate)
         self.optimizer2_p = torch.optim.Adam(self.model.classifier.linear.parameters(), lr=self.learning_rate)
