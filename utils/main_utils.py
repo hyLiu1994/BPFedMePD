@@ -10,13 +10,16 @@ from FLAlgorithms.servers.serverFedRep import FedRep
 from FLAlgorithms.servers.serverLGFedAvg import LGFedAvg
 from FLAlgorithms.servers.serverFedSOUL import FedSOUL
 from FLAlgorithms.servers.serverFedPAC import FedPAC
+from FLAlgorithms.servers.serverFedSI import FedSI
 
 def load_hypermater():
     # Setting hyperpameter 
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="Mnist", choices=["Mnist", "FMnist", "Cifar10"])
     parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
-    parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes", "BPFedPD", "FedPer", "LGFedAvg", "FedRep", "FedSOUL"]) 
+    parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes",
+                                                                              "BPFedPD", "FedPer", "LGFedAvg", "FedRep",
+                                                                              "FedSOUL", "FedSI"]) 
     # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
     parser.add_argument("--batch_size", type=int, default=50)
     parser.add_argument("--add_new_client", type=int, default=0)
@@ -33,6 +36,7 @@ def load_hypermater():
     parser.add_argument("--times", type=int, default=1, help="running time")
     parser.add_argument("--gpu", type=int, default=0, help="Which GPU to run the experiments, -1 mean CPU, 0,1,2 for GPU")
 
+    parser.add_argument("--subnetwork_rate", type=float, default=0.01)
     parser.add_argument("--weight_scale", type=float, default=0.1)
     parser.add_argument("--rho_offset", type=int, default=-3)
     parser.add_argument("--zeta", type=float, default=10)
@@ -57,6 +61,8 @@ def model_select(args):
     if (args.dataset == "Cifar10"):
         if (args.algorithm == 'pFedBayes' or args.algorithm == 'BPFedPD'):
             model = pCIFARNet(10).to(args.device), "pCIFARNet"
+        elif (args.algorithm == 'FedSI'):
+            model = CIFARNetFedSI(10).to(args.device), "CIFARNetFedSI"
         elif (args.algorithm == 'FedSOUL' or args.algorithm == 'FedPAC'):
             model = CIFARNetSoul(10).to(args.device), "pCIFARNet"
         else: 
@@ -65,7 +71,9 @@ def model_select(args):
     if (args.dataset == 'Mnist' or args.dataset == "FMnist"):
         if (args.algorithm == 'pFedBayes'):
             # model = pBNN(784, 100, 10, args.device, args.weight_scale, args.rho_offset, args.zeta).to(args.device), "pbnn"
-            model = pBNN_v2().to(args.device), "pbnn_v2"
+            model = pBNN_v2().to(args.device), "pbnn_v2"  
+        elif (args.algorithm == 'FedSI'):
+            model = DNNFedSI().to(args.device), "DNNFedSI"  
         elif (args.algorithm == 'BPFedPD'):
             model = pBNN_v2().to(args.device), "pbnn_v2"
         elif (args.algorithm == 'FedSOUL' or args.algorithm == 'FedPAC'):
@@ -106,5 +114,8 @@ def server_select(algorithm, model, exp_idx, args):
 
     if (algorithm == "FedPAC"):
         server = FedPAC(args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args.device, args.personal_learning_rate, args.only_one_local)
+
+    if(algorithm == "FedSI"):
+        server = FedSI(args.device, args.dataset, args.datasize, algorithm, model, args.batch_size, args.learning_rate, args.beta, args.lamda, args.num_glob_iters, args.local_epochs, args.optimizer, args.numusers, exp_idx, args, args.only_one_local)
 
     return server 
