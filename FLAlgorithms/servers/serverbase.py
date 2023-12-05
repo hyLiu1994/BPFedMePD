@@ -4,13 +4,15 @@ import numpy as np
 import h5py
 from utils.model_utils import Metrics
 import copy
+from utils.loadresult_utils import get_file_path
 
 class Server:
     def __init__(self, model, times, args):
         # Set up the main attributes
         self.max_acc = 0
+        # self.addclient_iters = args.add_new_client
+        # self.only_one_local = args.only_one_local
         self.output_list = []
-        self.only_one_local = args.only_one_local
         self.y_list = []
         self.device = args.device
         self.dataset = args.dataset
@@ -30,6 +32,8 @@ class Server:
         # self.rs_train_acc, self.rs_train_loss, self.rs_glob_acc,                  self.rs_train_acc_per, self.rs_train_loss_per, self.rs_glob_acc_per = [], [], [], [], [], []
         self.rs_train_acc, self.rs_train_loss, self.rs_glob_acc, self.rs_per_acc, self.rs_train_acc_per, self.rs_train_loss_per, self.rs_glob_acc_per = [], [], [], [], [], [], []
         self.times = times
+        self.save_results_path = get_file_path(args, False, times)[0]
+        [self.save_results_path_p, self.save_results_path_output, self.save_results_path_y] = get_file_path(args, True, times)
         # Initialize the server's grads to zeros
         #for param in self.model.parameters():
         #    param.data = torch.zeros_like(param.data)
@@ -130,34 +134,16 @@ class Server:
     # Save loss, accurancy to h5 fiel
     def save_results(self):
         print("store persionalized value!")
-        alg = self.dataset + "_" + self.datasize + "_" + self.algorithm
-        alg = alg + "_" + str(self.learning_rate) + "_" + str(self.beta) + "_" + str(self.lamda) + "_" + str(self.num_users) + "u" + "_" + str(self.batch_size) + "b" + "_" + str(self.local_epochs)
-        if(self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
-            alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
-        alg = alg + "_" + str(self.times)
-        if (self.algorithm == "FedSI"):
-            alg = alg + "_" + str(self.subnetwork_rate)
-        if (self.only_one_local):
-            alg = alg + "_only_one_local"
+
         if (len(self.rs_glob_acc) != 0 &  len(self.rs_train_acc) & len(self.rs_train_loss)) :
-            with h5py.File("./results/"+'{}.h5'.format(alg, self.local_epochs), 'w') as hf:
+            with h5py.File(self.save_results_path, 'w') as hf:
                 hf.create_dataset('rs_glob_acc', data=self.rs_glob_acc)
                 hf.create_dataset('rs_train_acc', data=self.rs_train_acc)
                 hf.create_dataset('rs_train_loss', data=self.rs_train_loss)
                 hf.close()
-        
-        # store persionalized value
-        alg = self.dataset + "_" + self.datasize  + "_" + self.algorithm + "_p"
-        alg = alg  + "_" + str(self.learning_rate) + "_" + str(self.beta) + "_" + str(self.lamda) + "_" + str(self.num_users) + "u" + "_" + str(self.batch_size) + "b"+ "_" + str(self.local_epochs)
-        if(self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
-            alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
-        alg = alg + "_" + str(self.times)
-        if (self.algorithm == "FedSI"):
-            alg = alg + "_" + str(self.subnetwork_rate)
-        if (self.only_one_local):
-            alg = alg + "_only_one_local"
+
         if (len(self.rs_glob_acc_per) != 0) :
-            with h5py.File("./results/"+'{}.h5'.format(alg, self.local_epochs), 'w') as hf:
+            with h5py.File(self.save_results_path_p, 'w') as hf:
                 hf.create_dataset('rs_glob_acc', data=self.rs_glob_acc_per)
                 if (len(self.rs_train_acc_per)):
                     hf.create_dataset('rs_train_acc', data=self.rs_train_acc_per)
@@ -166,8 +152,8 @@ class Server:
                 hf.close()
         self.output_list = torch.tensor(self.output_list)
         self.y_list = torch.tensor(self.y_list)
-        np.save("./results/"+'{}_output.npy'.format(alg, self.local_epochs), self.output_list.cpu().detach().numpy())
-        np.save("./results/"+'{}_y.npy'.format(alg, self.local_epochs), self.y_list.cpu().detach().numpy())
+        np.save(self.save_results_path_output, self.output_list.cpu().detach().numpy())
+        np.save(self.save_results_path_y, self.y_list.cpu().detach().numpy())
 
     def test(self):
         '''tests self.latest_model on given clients

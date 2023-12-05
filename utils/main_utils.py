@@ -27,7 +27,9 @@ def load_hypermater():
                                                                               "FedSOUL", "FedSI", "LocalOnly", "FedSIFac", "FedBABU"]) 
     # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
     parser.add_argument("--batch_size", type=int, default=50)
+    # the first client as add client, and iter number is add_new_client
     parser.add_argument("--add_new_client", type=int, default=0)
+    # only one client which is the first client, and iter number is num_glob_iters
     parser.add_argument("--only_one_local", type=int, default=0)
     parser.add_argument("--learning_rate", type=float, default=0.001, help="Local learning rate")
     parser.add_argument("--beta", type=float, default=1.0, help="Average moving parameter for pFedMe, or Second learning rate of Per-FedAvg")

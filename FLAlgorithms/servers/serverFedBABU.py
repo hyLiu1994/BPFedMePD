@@ -41,6 +41,10 @@ class FedBABU(Server):
             user.set_grads(grads)
 
     def train(self, AddNewClient = False):
+        if (AddNewClient):
+            self.users_copy = self.users
+            self.users = self.users[1:]
+
         loss = []
         for glob_iter in range(self.num_glob_iters):
             if (glob_iter > self.num_glob_iters - self.fineturn_iters):
@@ -65,7 +69,30 @@ class FedBABU(Server):
             self.selected_users = self.select_users(glob_iter,self.num_users)
 
             self.evaluate_personalized_model(hasPMB=False)
-            self.aggregate_parameters()
+            self.aggregate_parameters() 
+
+        if (AddNewClient):
+            loss = []
+            self.users = self.users_copy[0:1]
+            self.mark_personalized_module[-1] = self.mark_personalized_module[-2] = 1
+            for glob_iter in range(AddNewClient):
+                print("-------------Add New Client Round number: ",glob_iter, AddNewClient, " -------------")
+                # send all parameter for users 
+                self.send_parameters(personalized = self.mark_personalized_module)
+
+                # Evaluate gloal model on user for each interation
+                print("Evaluate global model")
+                print("")
+                self.evaluate()
+
+                # do update for all users not only selected users
+                for user in self.users:
+                    user.train(self.local_epochs, only_train_personal=True) #* user.train_samples
+                
+                self.selected_users = self.select_users(glob_iter,self.num_users)
+
+                self.evaluate_personalized_model(hasPMB=False)
+                self.aggregate_parameters()
 
         self.save_results()
         self.save_model()

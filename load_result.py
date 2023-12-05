@@ -11,9 +11,10 @@ from utils.loadresult_utils import *
 dataset_list = ["Mnist", "FMnist", "Cifar10"]
 datasize_list = ["small", "large"]
 #dataset_list = ["Mnist", "FMnist"]
-datasize_list = ["small", "large"]
+# datasize_list = ["small"]
+datasize_list = ["large"]
 # algorithm list: "FedPer", "LGFedAvg", "FedRep", "FedSOUL", "BPFedPD"
-algorithm_list = ["LocalOnly", "FedAvg", "FedAvgFT", "FedPer", "FedRep", "LGFedAvg", "pFedBayes", "BPFedPD","FedSOUL", "FedSI"]
+algorithm_list = ["LocalOnly", "FedAvg", "FedAvgFT", "FedBABU", "FedPer", "FedRep", "LGFedAvg", "pFedBayes", "BPFedPD","FedSOUL", "FedSI"]
 # output_style: 0, 1
 output_style = 1
 loadP = False
@@ -53,7 +54,7 @@ for run_idx in [0, 1]:
                     else:
                         args.only_one_local = 0
                     args_new = change_avg(args)
-                    file_path = get_file_path(args_new, loadP=loadP, run_idx=run_idx)
+                    file_path = get_file_path(args_new, loadP=loadP, run_idx=run_idx)[0]
                     with h5py.File(file_path , 'r') as f: 
                         # print(file_path)
                         if (args.add_new_client == 1):
