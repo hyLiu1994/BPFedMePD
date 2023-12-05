@@ -35,12 +35,15 @@ class UserFedSI(User):
         self.device = args.device
         self.loss = nn.CrossEntropyLoss()
 
+        other_parameters = [p for p in self.model.parameters() if not any(p is q for q in self.model.linear.parameters())]
         if (args.optimizer == "Adam"):  # Cifar10
             print("Optimizer:", args.optimizer)
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+            self.optimizer_p = torch.optim.Adam(self.model.linear.parameters(), lr=self.learning_rate)
         else:                           # Mnist
             print("Optimizer:", args.optimizer)
             self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
+            self.optimizer_p = torch.optim.SGD(self.model.linear.parameters(), lr=self.learning_rate)
 
         self.n_params = len(parameters_to_vector(self.model.parameters()).detach())
         self.sigma = torch.zeros(parameters_to_vector(self.model.parameters()).shape)
@@ -72,7 +75,7 @@ class UserFedSI(User):
             for idx, model_grad in enumerate(self.model.parameters()):
                 model_grad.data = new_grads[idx]
 
-    def train(self, epochs, mark_personalized_module):
+    def train(self, epochs, mark_personalized_module, only_train_personal=False):
         LOSS = 0
         self.model.train()
 
@@ -91,16 +94,24 @@ class UserFedSI(User):
         for epoch in range(1, self.local_epochs + 1):
             self.model.train()
             X, y = self.get_next_train_batch()
-            self.optimizer.zero_grad()
             output = self.model(X)
 
-            current_parameters = parameters_to_vector(self.model.parameters())
-            prior_loss = torch.sum(0.5 / (self.sigma) * mark_list * torch.pow(current_parameters - global_params, 2))
+            if (only_train_personal):
+                loss = self.loss(output, y)
 
-            # loss = self.loss(output, y) 
-            loss = self.loss(output, y) + prior_loss * self.prior_weight
-            loss.backward()
-            self.optimizer.step()
+                self.optimizer_p.zero_grad()
+                loss.backward()
+                self.optimizer_p.step()
+            else:
+                current_parameters = parameters_to_vector(self.model.parameters())
+                prior_loss = torch.sum(0.5 / (self.sigma) * mark_list * torch.pow(current_parameters - global_params, 2))
+                # loss = self.loss(output, y) 
+                loss = self.loss(output, y) + prior_loss * self.prior_weight
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
             self.clone_model_paramenter(self.model.parameters(), self.local_model)
 
         diag_la = Laplace(self.model, 'classification', 
@@ -110,17 +121,17 @@ class UserFedSI(User):
                                                                     n_params_subnet=int(self.n_params * self.subnetwork_rate), 
                                                                     diag_laplace_model = diag_la)
         subnetwork_indices = self.subnetwork_mask.select(self.trainloader)
-        # print("subnetwork_indices", subnetwork_indices)  
-
-        la = Laplace(self.model, 'classification',
-                    subset_of_weights='subnetwork',
-                    hessian_structure='full',
-                    subnetwork_indices=subnetwork_indices) 
-        sigma = la.fit(self.trainloader)
-        # print("sigma", sigma.mean())
-        diag_sigma = torch.diag(sigma)
-        # print("diag_sigma", diag_sigma.mean())
-        self.sigma = torch.zeros(parameters_to_vector(self.model.parameters()).shape).to(self.device)
-        self.sigma[subnetwork_indices] = diag_sigma
+        # print("subnetwork_indices", subnetwork_indices)   
+        if (only_train_personal != True):
+            la = Laplace(self.model, 'classification',
+                        subset_of_weights='subnetwork',
+                        hessian_structure='full',
+                        subnetwork_indices=subnetwork_indices) 
+            sigma = la.fit(self.trainloader)
+            # print("sigma", sigma.mean())
+            diag_sigma = torch.diag(sigma)
+            # print("diag_sigma", diag_sigma.mean())
+            self.sigma = torch.zeros(parameters_to_vector(self.model.parameters()).shape).to(self.device)
+            self.sigma[subnetwork_indices] = diag_sigma
 
         return LOSS
