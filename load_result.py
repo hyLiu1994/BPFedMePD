@@ -13,8 +13,7 @@ datasize_list = ["small", "large"]
 #dataset_list = ["Mnist", "FMnist"]
 datasize_list = ["small", "large"]
 # algorithm list: "FedPer", "LGFedAvg", "FedRep", "FedSOUL", "BPFedPD"
-algorithm_list = ["LocalOnly", "FedAvg", "FedPer", "FedRep", "LGFedAvg", "pFedBayes", "BPFedPD","FedSOUL"]
-# algorithm_list = ["FedAvg"]
+algorithm_list = ["LocalOnly", "FedAvg", "FedAvgFT", "FedPer", "FedRep", "LGFedAvg", "pFedBayes", "BPFedPD","FedSOUL", "FedSI"]
 # output_style: 0, 1
 output_style = 1
 loadP = False

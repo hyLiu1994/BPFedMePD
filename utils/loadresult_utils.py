@@ -25,7 +25,7 @@ def change_avg(args_pre):
         else:
             args.learning_rate = 0.1
             args.subnetwork_rate = 0.05
-    if (args.algorithm == "FedAvg" or args.algorithm == "LocalOnly"):
+    if (args.algorithm == "FedAvg" or args.algorithm == "LocalOnly" or args.algorithm == "FedAvgFT"):
         if (args.dataset == "Cifar10"):
             args.learning_rate = 0.01
         else:

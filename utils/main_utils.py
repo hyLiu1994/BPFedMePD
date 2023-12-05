@@ -15,6 +15,7 @@ from FLAlgorithms.servers.serverFedSI import FedSI
 from FLAlgorithms.servers.serverLocalOnly import LocalOnly
 from FLAlgorithms.servers.serverFedAvgFT import FedAvgFT
 from FLAlgorithms.servers.serverFedSIFac import FedSIFac
+from FLAlgorithms.servers.serverFedBABU import FedBABU
 
 def load_hypermater():
     # Setting hyperpameter 
@@ -23,7 +24,7 @@ def load_hypermater():
     parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
     parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes", "FedPAC",
                                                                               "BPFedPD", "FedPer", "LGFedAvg", "FedRep", "FedAvgFT",
-                                                                              "FedSOUL", "FedSI", "LocalOnly", "FedSIFac"]) 
+                                                                              "FedSOUL", "FedSI", "LocalOnly", "FedSIFac", "FedBABU"]) 
     # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
     parser.add_argument("--batch_size", type=int, default=50)
     parser.add_argument("--add_new_client", type=int, default=0)
@@ -119,5 +120,7 @@ def server_select(model, exp_idx, args):
         server = FedAvgFT(model, exp_idx, args)
     elif (args.algorithm == "FedSIFac"):
         server = FedSIFac(model, exp_idx, args)
+    elif (args.algorithm == "FedBABU"):
+        server = FedBABU(model, exp_idx, args)
 
     return server 
