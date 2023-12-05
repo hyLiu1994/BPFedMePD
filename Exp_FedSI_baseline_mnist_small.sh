@@ -3,6 +3,7 @@ python main.py --dataset Mnist --datasize small --algorithm LocalOnly --num_glob
 python main.py --dataset Mnist --datasize small --algorithm FedAvg --num_glob_iters 800 --times 2 & 
 python main.py --dataset Mnist --datasize small --algorithm FedAvgFT --num_glob_iters 800 --num_fineturn_iters 100 --times 2 & 
 python main.py --dataset Mnist --datasize small --algorithm FedPer --num_glob_iters 800 --times 2 & 
+python main.py --dataset Mnist --datasize small --algorithm FedBABU --num_glob_iters 800 --num_fineturn_iters 100 --times 2 & 
 python main.py --dataset Mnist --datasize small --algorithm FedRep --num_glob_iters 800 --times 2 & 
 python main.py --dataset Mnist --datasize small --algorithm LGFedAvg --num_glob_iters 800 --times 2 & 
 python main.py --dataset Mnist --datasize small --algorithm pFedBayes --num_glob_iters 800 --batch_size 100 --times 2 & 

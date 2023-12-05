@@ -2,6 +2,7 @@ python main.py --dataset FMnist --datasize large --algorithm LocalOnly --num_glo
 python main.py --dataset FMnist --datasize large --algorithm FedAvg --num_glob_iters 800 --times 2 & 
 python main.py --dataset FMnist --datasize large --algorithm FedAvgFT --num_glob_iters 800 --num_fineturn_iters 100 --times 2 & 
 python main.py --dataset FMnist --datasize large --algorithm FedPer --num_glob_iters 800 --times 2 & 
+python main.py --dataset FMnist --datasize large --algorithm FedBABU --num_glob_iters 800 --num_fineturn_iters 100 --times 2 & 
 python main.py --dataset FMnist --datasize large --algorithm FedRep --num_glob_iters 800 --times 2 & 
 python main.py --dataset FMnist --datasize large --algorithm LGFedAvg --num_glob_iters 800 --times 2 & 
 python main.py --dataset FMnist --datasize large --algorithm pFedBayes --num_glob_iters 800 --batch_size 100 --times 2 & 

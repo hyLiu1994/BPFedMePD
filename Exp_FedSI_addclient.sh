@@ -1,0 +1,18 @@
+bash Exp_FedSI_FedPer_addclient.sh
+wait
+bash Exp_FedSI_FedSI_addclient.sh
+wait
+bash Exp_FedSI_FedSIFac_addclient.sh
+wait
+bash Exp_FedSI_FedSOUL_addclient.sh
+wait
+bash Exp_FedSI_BPFed_addclient.sh
+wait
+bash Exp_FedSI_FedRep_addclient.sh
+wait
+bash Exp_FedSI_LGFedAvg_addclient.sh
+wait
+bash Exp_FedSI_LGFedAvg_addclient.sh
+wait
+bash Exp_FedSI_Cifar_large_addclient.sh
+wait
