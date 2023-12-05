@@ -71,18 +71,13 @@ class FedPer(Server):
                 print("-------------Add New Client Round number: ",glob_iter, AddNewClient, " -------------")
                 # send all parameter for users 
                 self.send_parameters(personalized = self.mark_personalized_module)
-
                 # Evaluate gloal model on user for each interation
                 print("Evaluate global model")
-                print("")
                 self.evaluate()
-
                 # do update for all users not only selected users
                 for user in self.users:
                     user.train(self.local_epochs, only_train_personal=True) #* user.train_samples
-                
                 self.selected_users = self.select_users(glob_iter,self.num_users)
-
                 self.evaluate_personalized_model(hasPMB=False)
                 self.aggregate_parameters()
 
