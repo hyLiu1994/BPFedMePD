@@ -101,6 +101,7 @@ def plot_calibration_error(probs, targets, path, color='darkblue'):
 
     plt.savefig(path, bbox_inches="tight", dpi=300)
     plt.close()
+    return ece, max_err, detach_to_numpy(bri).astype(np.float32).item()
 
 args = load_hypermater()
 
@@ -108,20 +109,20 @@ dataset_list = ["Mnist", "FMnist", "Cifar10"]
 datasize_list = ["small", "large"]
 
 # dataset_list = ["Mnist"]
-# datasize_list = ["small"]
+datasize_list = ["small"]
 
 # algorithm_list = ["BPFedPD", "pFedBayes"]
 algorithm_list = ["FedAvg", "PerAvg", "pFedMe", "FedPer", "LGFedAvg", "FedRep", "FedSOUL", "pFedBayes", "BPFedPD"]
-algorithm_list = ["FedSI", "FedAvg"]
+algorithm_list = ["FedSI"]
 
 for args.algorithm in algorithm_list:
     for args.dataset in dataset_list:
         for args.datasize in datasize_list:
             args_now = change_avg(args)
-            file_path = get_file_path(args_now, loadP=True)
+            file_path = get_file_path(args_now, loadP=True)[0]
             label_list = np.load(file_path[:-3] + "_y.npy")
             output_list = np.load(file_path[:-3] + "_output.npy")
-            plot_calibration_error(output_list, label_list, file_path[:-2] + "png")
+            ECE_MCE_BRI = plot_calibration_error(output_list, label_list, file_path[:-2] + "png")
             # compute_calibration(true_labels, pred_labels, confidences, num_bins=10)
             if (output_list.min() < 0 or output_list.max() > 1):
                 output_list = F.softmax(torch.tensor(output_list), dim=-1).numpy()
@@ -129,4 +130,5 @@ for args.algorithm in algorithm_list:
             output_list = torch.tensor(output_list).max(-1)[0].numpy()
             print(file_path[:-2] + "pdf")
             # reliability_diagram(label_list, accuracies, output_list , file_path[:-2] + "png")
-            reliability_diagram(label_list, accuracies, output_list , file_path[:-2] + "pdf")
+            print(ECE_MCE_BRI)
+            reliability_diagram(label_list, accuracies, output_list , file_path[:-2] + "pdf", ECE_MCE_BRI=ECE_MCE_BRI)
