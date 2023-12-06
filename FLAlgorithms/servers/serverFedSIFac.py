@@ -116,7 +116,7 @@ class FedSIFac(Server):
                 self.evaluate()
                 self.selected_users = self.select_users(glob_iter, self.num_users)
                 for user in self.selected_users:
-                    user.train(self.local_epochs, self.mark_personalized_module) #* user.train_samples
+                    user.train(self.local_epochs, self.mark_personalized_module, only_train_personal=True) #* user.train_samples
                 self.evaluate_personalized_model(hasPMB=False)
                 self.aggregate_parameters()
 
