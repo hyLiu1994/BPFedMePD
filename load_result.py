@@ -9,10 +9,11 @@ from utils.loadresult_utils import *
 # dataset_list: "Mnist", "FMnist", "Cifar10"
 # datasize_list: "small", "large"
 dataset_list = ["Mnist", "FMnist", "Cifar10"]
+#dataset_list = ["Mnist","FMnist"]
 datasize_list = ["small", "large"]
 #dataset_list = ["Mnist", "FMnist"]
 # datasize_list = ["small"]
-datasize_list = ["large"]
+# datasize_list = ["large"]
 # algorithm list: "FedPer", "LGFedAvg", "FedRep", "FedSOUL", "BPFedPD"
 algorithm_list = ["LocalOnly", "FedAvg", "FedAvgFT", "FedBABU", "FedPer", "FedRep", "LGFedAvg", "pFedBayes", "BPFedPD","FedSOUL", "FedSI"]
 # output_style: 0, 1

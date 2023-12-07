@@ -176,9 +176,12 @@ def get_max_value_index(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[], l
         ), "Index: ", np.argmax(glob_acc[i]), "local update:", loc_ep1[i])
 
 def get_label_name(name):
+    if name.startswith("FedAvgFT"):
+        return "FedAvg-FT"
+
     if name.startswith("FedAvg"):
-        return "FedAvg"
-    
+        return "FedAvg" 
+
     if name.startswith("PerAvg"):
         return "PerAvg"
     
@@ -201,7 +204,7 @@ def get_label_name(name):
         return "pFedBayes"
     
     if name.startswith("BPFedPD"):
-        return "BPFedPD"
+        return "BPFed"
     return name
 
 def average_smooth(data, window_len=20, window='hanning'):
@@ -237,8 +240,8 @@ def plot_summary_one_figure_mnist_Compare(num_users, Numb_Glob_Iters, algorithms
     
     linestyles = ['-', '--', '-.','-', '--', '-.', '-', '--', '-.']
     linestyles = ['-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-']
-    markers = ["o","v","s","*","x","P", "*","x","P", "o","v","s","*","x","P", "*","x","P"]
-    colors = ['tab:blue', 'tab:green', 'r', 'darkorange', 'tab:brown', 'm', 'tab:blue', 'c', 'k', 'tab:blue', 'tab:green', 'r', 'darkorange', 'tab:brown', 'm', 'tab:blue', 'c', 'k']
+    markers = ["o","v","s","*","x","P", "D","^","P", "1","H","s","*","x","P", "*","x","P"]
+    colors = ['tab:blue', 'tab:green', 'tab:cyan', 'darkorange', 'tab:brown', 'm', 'tab:blue', 'c', 'k', 'pink', 'r',  'darkorange', 'tab:brown', 'm', 'tab:blue', 'c', 'k']
     plt.figure(1,figsize=(5, 5))
     # plt.title("$\mu-$"+ "strongly convex")
     # plt.title("Nonconvex") # for non convex case
