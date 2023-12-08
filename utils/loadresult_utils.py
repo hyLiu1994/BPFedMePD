@@ -21,7 +21,7 @@ def get_file_path(args, loadP = False, run_idx = 0):
 
 def change_avg(args_pre):
     args = copy.deepcopy(args_pre)
-    if (args.algorithm == "FedSI"):
+    if (args.algorithm == "FedSI" or args.algorithm == "FedSIFac"):
         args.lamda = 0.0001
         args.batch_size = 50
         if (args.dataset == "Cifar10"):

@@ -14,7 +14,7 @@ torch.manual_seed(0)
 
 numusers = 10 
 num_glob_iters = 800 
-algorithm_list = ["LocalOnly", "FedAvg", "FedAvgFT", "FedBABU", "FedPer", "FedRep", "LGFedAvg", "pFedBayes", "BPFedPD","FedSOUL", "FedSI"]
+algorithm_list = ["LocalOnly", "FedAvg", "FedAvgFT", "FedBABU", "FedPer", "FedRep", "LGFedAvg", "pFedBayes", "BPFedPD","FedSOUL", "FedSIFac", "FedSI"]
 
 args = load_hypermater()
 for args.dataset in ["Mnist", "FMnist", "Cifar10"]:
