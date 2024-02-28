@@ -4,11 +4,23 @@ import numpy as np
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 from matplotlib.ticker import StrMethodFormatter
 import os
+from utils.loadresult_utils import get_file_path, change_avg
 plt.rcParams.update({'font.size': 14})
 
 def simple_read_data(alg):
     # print(alg)
     hf = h5py.File("./results/FinalAns_ExpTable/"+'{}.h5'.format(alg), 'r')
+    # hf = h5py.File("./results/"+'{}.h5'.format(alg), 'r')
+    rs_glob_acc = np.array(hf.get('rs_glob_acc')[:])
+    # rs_train_acc = np.array(hf.get('rs_train_acc')[:])
+    # rs_train_loss = np.array(hf.get('rs_train_loss')[:])
+    rs_train_acc = np.ones(rs_glob_acc.shape)
+    rs_train_loss = np.ones(rs_glob_acc.shape)
+    return rs_train_acc, rs_train_loss, rs_glob_acc
+
+def simple_read_data(file_path):
+    # print(alg)
+    hf = h5py.File(file_path, 'r')
     # hf = h5py.File("./results/"+'{}.h5'.format(alg), 'r')
     rs_glob_acc = np.array(hf.get('rs_glob_acc')[:])
     # rs_train_acc = np.array(hf.get('rs_train_acc')[:])
@@ -34,6 +46,19 @@ def get_training_data_value(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[
         # print(dataset + "_" + datasize +"_"+ algorithms_list[i] + "_0")
         train_acc[i, :], train_loss[i, :], glob_acc[i, :] = np.array(
             simple_read_data(dataset + "_" + datasize +"_"+ algorithms_list[i] + "_0"))[:, :Numb_Glob_Iters]
+        algs_lbl[i] = algs_lbl[i]
+    return glob_acc, train_acc, train_loss
+
+def get_training_data_value(num_users=100, Numb_Glob_Iters=10, algorithms_list=[], args=None):
+    Numb_Algs = len(algorithms_list)
+    train_acc = np.zeros((Numb_Algs, Numb_Glob_Iters))
+    train_loss = np.zeros((Numb_Algs, Numb_Glob_Iters))
+    glob_acc = np.zeros((Numb_Algs, Numb_Glob_Iters))
+    algs_lbl = algorithms_list.copy()
+    for i in range(Numb_Algs):
+        args.algorithm = algorithms_list[i]
+        loss_path = get_file_path(change_avg(args))[0]
+        train_acc[i, :], train_loss[i, :], glob_acc[i, :] = np.array(simple_read_data(file_path=loss_path))[:, :Numb_Glob_Iters]
         algs_lbl[i] = algs_lbl[i]
     return glob_acc, train_acc, train_loss
 
@@ -151,9 +176,12 @@ def get_max_value_index(num_users=100, loc_ep1=5, Numb_Glob_Iters=10, lamb=[], l
         ), "Index: ", np.argmax(glob_acc[i]), "local update:", loc_ep1[i])
 
 def get_label_name(name):
+    if name.startswith("FedAvgFT"):
+        return "FedAvg-FT"
+
     if name.startswith("FedAvg"):
-        return "FedAvg"
-    
+        return "FedAvg" 
+
     if name.startswith("PerAvg"):
         return "PerAvg"
     
@@ -176,7 +204,8 @@ def get_label_name(name):
         return "pFedBayes"
     
     if name.startswith("BPFedPD"):
-        return "BPFedPD"
+        return "BPFed"
+    return name
 
 def average_smooth(data, window_len=20, window='hanning'):
     results = []
@@ -195,11 +224,10 @@ def average_smooth(data, window_len=20, window='hanning'):
         results.append(y[window_len-1:])
     return np.array(results)
 
-def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate):
+def plot_summary_one_figure_mnist_Compare(num_users, Numb_Glob_Iters, algorithms_list, args):
     Numb_Algs = len(algorithms_list)   
-    dataset = dataset
     
-    glob_acc_, train_acc_, train_loss_ = get_training_data_value( num_users, loc_ep1, Numb_Glob_Iters, lamb, learning_rate, beta, algorithms_list, batch_size, dataset, datasize, k, personal_learning_rate )
+    glob_acc_, train_acc_, train_loss_ = get_training_data_value(num_users, Numb_Glob_Iters, algorithms_list, args)
     # for i in range(Numb_Algs):
     #     print(algorithms_list[i])
     #     print("max accurancy:", glob_acc_[i].max())
@@ -211,10 +239,9 @@ def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, l
 
     
     linestyles = ['-', '--', '-.','-', '--', '-.', '-', '--', '-.']
-    linestyles = ['-','-','-','-','-','-','-','-','-','-']
-    markers = ["o","v","s","*","x","P", "*","x","P"]
-    print(lamb)
-    colors = ['tab:blue', 'tab:green', 'r', 'darkorange', 'tab:brown', 'm', 'tab:blue', 'c', 'k']
+    linestyles = ['-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-']
+    markers = ["o","v","s","*","x","P", "D","^","P", "1","H","s","*","x","P", "*","x","P"]
+    colors = ['tab:blue', 'tab:green', 'tab:cyan', 'darkorange', 'tab:brown', 'm', 'tab:blue', 'c', 'k', 'pink', 'magenta', 'r', 'tab:brown', 'm', 'tab:blue', 'c', 'k']
     plt.figure(1,figsize=(5, 5))
     # plt.title("$\mu-$"+ "strongly convex")
     # plt.title("Nonconvex") # for non convex case
@@ -243,14 +270,13 @@ def plot_summary_one_figure_mnist_Compare(num_users, loc_ep1, Numb_Glob_Iters, l
     for i in range(Numb_Algs):
         label = get_label_name(algorithms_list[i])
         # label = algorithms_list[i][:10]
-
         plt.plot(glob_acc[i, 1:], linestyle=linestyles[i], label=label, linewidth = 1, color=colors[i],marker = markers[i],markevery=0.2, markersize=5)
     plt.legend(loc='lower right',fontsize=8)
     plt.ylabel('Test Accuracy')
     plt.xlabel('Global rounds')
     #plt.ylim([0.84,  0.98]) # non convex-case
     #plt.ylim([0.88,  0.95]) # Convex-case
-    print("./Figure/" + dataset.upper() + datasize.upper() + ".pdf")
-    plt.savefig("./Figure/" + dataset.upper() + datasize.upper() + ".pdf", bbox_inches="tight")
+    print("./Figure/" + args.dataset.upper() + args.datasize.upper() + ".pdf")
+    plt.savefig("./Figure/" + args.dataset.upper() + args.datasize.upper() + ".pdf", bbox_inches="tight")
     # plt.savefig(dataset.upper() + "Non_Convex_Mnist_test_Com.pdf", bbox_inches="tight")
     plt.close()

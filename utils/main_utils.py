@@ -15,6 +15,7 @@ from FLAlgorithms.servers.serverFedSI import FedSI
 from FLAlgorithms.servers.serverLocalOnly import LocalOnly
 from FLAlgorithms.servers.serverFedAvgFT import FedAvgFT
 from FLAlgorithms.servers.serverFedSIFac import FedSIFac
+from FLAlgorithms.servers.serverFedBABU import FedBABU
 
 def load_hypermater():
     # Setting hyperpameter 
@@ -23,10 +24,12 @@ def load_hypermater():
     parser.add_argument("--datasize", type=str, default="small", choices=["small", "large"])
     parser.add_argument("--algorithm", type=str, default="pFedBayes",choices=["pFedMe", "PerAvg", "FedAvg", "pFedBayes", "FedPAC",
                                                                               "BPFedPD", "FedPer", "LGFedAvg", "FedRep", "FedAvgFT",
-                                                                              "FedSOUL", "FedSI", "LocalOnly", "FedSIFac"]) 
+                                                                              "FedSOUL", "FedSI", "LocalOnly", "FedSIFac", "FedBABU"]) 
     # parser.add_argument("--model_name", type=str, default="pcnn", choices=["dnn", "cnn", 'pbnn', 'pcnn'])
     parser.add_argument("--batch_size", type=int, default=50)
+    # the first client as add client, and iter number is add_new_client
     parser.add_argument("--add_new_client", type=int, default=0)
+    # only one client which is the first client, and iter number is num_glob_iters
     parser.add_argument("--only_one_local", type=int, default=0)
     parser.add_argument("--learning_rate", type=float, default=0.001, help="Local learning rate")
     parser.add_argument("--beta", type=float, default=1.0, help="Average moving parameter for pFedMe, or Second learning rate of Per-FedAvg")
@@ -119,5 +122,7 @@ def server_select(model, exp_idx, args):
         server = FedAvgFT(model, exp_idx, args)
     elif (args.algorithm == "FedSIFac"):
         server = FedSIFac(model, exp_idx, args)
+    elif (args.algorithm == "FedBABU"):
+        server = FedBABU(model, exp_idx, args)
 
     return server 

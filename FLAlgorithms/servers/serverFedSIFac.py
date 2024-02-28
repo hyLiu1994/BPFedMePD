@@ -21,8 +21,12 @@ class FedSIFac(Server):
         data = read_data(args.dataset, args.datasize)
         self.device = args.device
         self.subnetwork_rate = args.subnetwork_rate
-        total_users = len(data[0])
-        for i in range(total_users):
+
+        if (args.only_one_local):
+            self.total_users = 1
+        else:
+            self.total_users = len(data[0])
+        for i in range(self.total_users):
             id, train , test = read_user_data(i, data, args.dataset)
             user = UserFedSIFac(id, train, test, model, args)
             self.users.append(user)
@@ -35,7 +39,7 @@ class FedSIFac(Server):
         self.n_params = len(parameters_to_vector(self.model.parameters()).detach())
         self.global_sigma = torch.zeros(parameters_to_vector(self.model.parameters()).shape).to(args.device)
         self.global_sigma += 1 / self.lamda
-        print("Number of users / total users:", args.numusers, " / " ,total_users)
+        print("Number of users / total users:", args.numusers, " / " ,self.total_users)
         print("Finished creating FedSI server.")
 
     def send_grads(self, AddNewClient = False):
@@ -82,7 +86,11 @@ class FedSIFac(Server):
 
         print("after_global_sigma", self.global_sigma.mean())
 
-    def train(self, add_new_client = False):
+    def train(self, AddNewClient = False):
+        if (AddNewClient):
+            self.users_copy = self.users
+            self.users = self.users[1:]
+
         loss = []
         for glob_iter in range(self.num_glob_iters):
             print("-------------Round number: ",glob_iter, " -------------")
@@ -95,6 +103,22 @@ class FedSIFac(Server):
                 user.train(self.local_epochs, self.mark_personalized_module) #* user.train_samples
             self.evaluate_personalized_model(hasPMB=False)
             self.aggregate_parameters()
+
+        if (AddNewClient):
+            loss = []
+            self.users = self.users_copy[0:1]
+            self.mark_personalized_module[-1] = self.mark_personalized_module[-2] = 1
+            for glob_iter in range(self.num_glob_iters):
+                print("-------------Add New Client Round number: ",glob_iter, " -------------")
+                #loss_ = 0
+                self.send_parameters(personalized = self.mark_personalized_module)
+                # Evaluate model each interation
+                self.evaluate()
+                self.selected_users = self.select_users(glob_iter, self.num_users)
+                for user in self.selected_users:
+                    user.train(self.local_epochs, self.mark_personalized_module, only_train_personal=True) #* user.train_samples
+                self.evaluate_personalized_model(hasPMB=False)
+                self.aggregate_parameters()
 
         self.save_results()
         self.save_model()
