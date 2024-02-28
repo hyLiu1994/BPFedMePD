@@ -131,4 +131,4 @@ for args.algorithm in algorithm_list:
             print(file_path[:-2] + "pdf")
             # reliability_diagram(label_list, accuracies, output_list , file_path[:-2] + "png")
             print(ECE_MCE_BRI)
-            reliability_diagram(label_list, accuracies, output_list , file_path[:-2] + "pdf", ECE_MCE_BRI=ECE_MCE_BRI)
+            reliability_diagram(label_list, accuracies, output_list , file_path[:-2] + "pdf", ECE_MCE_BRI=ECE_MCE_BRI, draw_ece=True)

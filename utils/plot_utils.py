@@ -241,7 +241,7 @@ def plot_summary_one_figure_mnist_Compare(num_users, Numb_Glob_Iters, algorithms
     linestyles = ['-', '--', '-.','-', '--', '-.', '-', '--', '-.']
     linestyles = ['-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-']
     markers = ["o","v","s","*","x","P", "D","^","P", "1","H","s","*","x","P", "*","x","P"]
-    colors = ['tab:blue', 'tab:green', 'tab:cyan', 'darkorange', 'tab:brown', 'm', 'tab:blue', 'c', 'k', 'pink', 'r',  'darkorange', 'tab:brown', 'm', 'tab:blue', 'c', 'k']
+    colors = ['tab:blue', 'tab:green', 'tab:cyan', 'darkorange', 'tab:brown', 'm', 'tab:blue', 'c', 'k', 'pink', 'magenta', 'r', 'tab:brown', 'm', 'tab:blue', 'c', 'k']
     plt.figure(1,figsize=(5, 5))
     # plt.title("$\mu-$"+ "strongly convex")
     # plt.title("Nonconvex") # for non convex case

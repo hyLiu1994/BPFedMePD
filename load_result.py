@@ -10,12 +10,14 @@ from utils.loadresult_utils import *
 # datasize_list: "small", "large"
 dataset_list = ["Mnist", "FMnist", "Cifar10"]
 #dataset_list = ["Mnist","FMnist"]
-datasize_list = ["small", "large"]
+#datasize_list = ["small"]
 #dataset_list = ["Mnist", "FMnist"]
-# datasize_list = ["small"]
+datasize_list = ["small","large"]
 # datasize_list = ["large"]
 # algorithm list: "FedPer", "LGFedAvg", "FedRep", "FedSOUL", "BPFedPD"
-algorithm_list = ["LocalOnly", "FedAvg", "FedAvgFT", "FedBABU", "FedPer", "FedRep", "LGFedAvg", "pFedBayes", "BPFedPD","FedSOUL", "FedSI"]
+#algorithm_list = ["LocalOnly", "FedAvg", "FedAvgFT", "FedBABU", "FedPer", "FedRep", "LGFedAvg", "pFedBayes", "BPFedPD","FedSOUL", "FedSIFac", "FedSI"]
+#algorithm_list=["FedPer", "FedRep", "FedBABU", "LGFedAvg", "FedSOUL", "BPFedPD", "FedSI"]
+algorithm_list = ["FedSI"]
 # output_style: 0, 1
 output_style = 1
 loadP = False
@@ -41,7 +43,7 @@ print_head(args)
 
 for run_idx in [0, 1]:
     for args.algorithm in algorithm_list:
-        for args.add_new_client in [0]:
+        for args.add_new_client in [100]:
             if (output_style == 1):
                 print("\"%10s\""%(args.algorithm + " " + str(args.add_new_client)), end=" ")
                 print(":[", end="")

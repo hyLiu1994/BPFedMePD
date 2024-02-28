@@ -22,7 +22,9 @@ def get_file_path(args, loadP = False, run_idx = 0):
 def change_avg(args_pre):
     args = copy.deepcopy(args_pre)
     if (args.algorithm == "FedSI" or args.algorithm == "FedSIFac"):
-        args.lamda = 0.0001
+        # Old Version
+        args.lamda = 15
+        # args.lamda = 0.0001
         args.batch_size = 50
         if (args.dataset == "Cifar10"):
             args.learning_rate = 0.01
