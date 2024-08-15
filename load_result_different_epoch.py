@@ -13,7 +13,7 @@ datasize_list = ["small"]
 algorithm_list = ["FedAvg", "FedBABU", "LGFedAvg", "BPFedPD", "FedSIFac", "FedSI"]
 
 args = load_hypermater()
-for run_idx in [0, 1]:
+for run_idx in [0]:
     for args.algorithm in algorithm_list:
         print("\"%10s\""%(args.algorithm),  end=" ")
         for args.local_epochs in [5,10,15,20]:
